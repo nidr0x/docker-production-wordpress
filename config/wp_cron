@@ -1,0 +1,5 @@
+WordPress cron
+15 0 * * * sleep 119s ; php -q /var/www/wp-cron.php
+
+Cleanup expired transients
+@daily wp transient delete --expired --path=/usr/src/wordpress

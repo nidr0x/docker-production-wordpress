@@ -1,0 +1,99 @@
+version: '3.7'
+
+volumes:
+  vol-wp-content:  
+  vol-wp-images:
+  vol-wp-db: 
+
+networks:
+  frontend:
+    name: frontend
+    external: true
+  backend:
+    name: backend
+ 
+services:
+  balancer:
+    image: traefik:latest
+    container_name: traefik
+    networks:
+      - backend
+      - frontend
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  
+    labels:
+      - "traefik.docker.network=frontend"
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:test.com"
+      - "traefik.port=8080"
+      - "traefik.backend.healthcheck.path=/index.php"
+    restart: always
+    environment:
+      - LEXICON_SLEEP_TIME=60
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/traefik.toml:/etc/traefik/traefik.toml
+      - ./traefik/acme/acme.json:/acme.json
+
+  db:
+    image: mariadb:latest
+    container_name: mariadb 
+    networks:
+      - backend
+    restart: always
+    volumes:
+      - vol-wp-db:/var/lib/mysql
+    ports:
+      - "3306:3306" 
+    labels:
+      - "traefik.enable=false" 
+
+  wordpress:
+    depends_on:
+      - db
+    networks:
+      - backend
+      - frontend
+    container_name: wordpress
+    build: ./
+    volumes:
+      - vol-wp-content:/var/www/wp-content
+      - vol-wp-images:/var/www/images
+    environment:
+      DISABLE_WP_CRON: "true"
+      TABLE_PREFIX: wp_
+      FS_METHOD: direct
+      WP_DEBUG: "true"
+    labels:
+      - "traefik.enable=true" 
+      - "traefik.docker.network=frontend"
+      - "traefik.frontend.rule=Host:test.com,www.test.com"  
+      - "traefik.frontend.redirect.regex=^https?://test.com/(.*)"
+      - "traefik.frontend.redirect.replacement=https://www.test.com/$${1}"
+      - "traefik.frontend.headers.SSLRedirect=true"
+      - "traefik.frontend.headers.STSSeconds=315360000"
+      - "traefik.frontend.headers.browserXSSFilter=true"
+      - "traefik.frontend.headers.contentTypeNosniff=true"
+      - "traefik.frontend.headers.forceSTSHeader=true"
+      - "traefik.acme.domains=test.com,www.test.com"
+
+  watchtower:
+    image: v2tec/watchtower:latest
+    container_name: watchtower
+    command: --cleanup --schedule "0 0 0 * * *"
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - "traefik.enable=false"
+
+  mail:
+    image: bytemark/smtp
+    container_name: wp-smtp
+    restart: always
+    networks:
+      - frontend
+    labels:
+      - "traefik.enable=false"
