@@ -1,6 +1,8 @@
-FROM alpine:3.8
+FROM alpine:3.9
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
       Description="WP container in Alpine Linux with nginx 1.14 and latest stable PHP-FPM 7x"
+
+ENV WP_VERSION 5.1.1
 
 RUN set -x \
     && addgroup -g 82 -S www-data \
@@ -18,7 +20,7 @@ RUN chown -R www-data:www-data /var/www
 
 WORKDIR /usr/src
 RUN mkdir -p /usr/src/wordpress \ 
-    && curl -sfo /usr/src/wordpress.tar.gz  -L https://wordpress.org/latest.tar.gz  \
+    && curl -sfo /usr/src/wordpress.tar.gz  -L https://wordpress.org/wordpress-${WP_VERSION}.tar.gz  \
     && tar -xzf /usr/src/wordpress.tar.gz \
     && rm -rf /usr/src/wordpress.tar.gz \
     && rm -rf /usr/src/wp-content \
