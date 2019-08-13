@@ -1,6 +1,6 @@
-FROM alpine:3.9
+FROM alpine:3.10
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
-      Description="WP container in Alpine Linux with nginx 1.14 and latest stable PHP-FPM 7x"
+      Description="WP container in Debian Linux with nginx 1.16.0 and latest stable PHP-FPM 7x"
 
 ENV WP_VERSION 5.1.1
 
@@ -9,26 +9,26 @@ RUN set -x \
     && adduser -u 82 -D -S -G www-data www-data
 
 RUN apk --no-cache add php7 php7-fpm php7-mysqli php7-json php7-openssl php7-curl \
-    php7-simplexml php7-ctype php7-mbstring php7-gd nginx supervisor ncurses curl \
+    php7-simplexml php7-ctype php7-mbstring php7-gd nginx=1.16.0-r2 supervisor ncurses curl \
     php7-zlib php7-xml php7-phar php7-intl php7-dom php7-xmlreader php7-xmlwriter \
     bash libpng libjpeg-turbo \
-    && rm -rf /var/www/localhost 
+    && rm -rf /var/www/localhost
 
 VOLUME /var/www/wp-content
 WORKDIR /var/www/wp-content
 RUN chown -R www-data:www-data /var/www
 
 WORKDIR /usr/src
-RUN mkdir -p /usr/src/wordpress \ 
+RUN mkdir -p /usr/src/wordpress \
     && curl -sfo /usr/src/wordpress.tar.gz  -L https://wordpress.org/wordpress-${WP_VERSION}.tar.gz  \
     && tar -xzf /usr/src/wordpress.tar.gz \
     && rm -rf /usr/src/wordpress.tar.gz \
     && rm -rf /usr/src/wp-content \
     && ln -s /var/www/wp-content/ /usr/src/wordpress/wp-content \
-    && ln -s /var/www/images/ /usr/src/wordpress/images \ 
+    && ln -s /var/www/images/ /usr/src/wordpress/images \
     && chown -R www-data:www-data /usr/src/wordpress \
     && sed -i s/'user = nobody'/'user = www-data'/g /etc/php7/php-fpm.d/www.conf \
-    && sed -i s/'group = nobodoy'/'group = www-data'/g /etc/php7/php-fpm.d/www.conf 
+    && sed -i s/'group = nobodoy'/'group = www-data'/g /etc/php7/php-fpm.d/www.conf
 
 COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/fpm-pool.conf /etc/php7/php-fpm.d/fpm-pool.conf
@@ -45,7 +45,7 @@ RUN rm -rf /tmp/* \
     && chown www-data:www-data /usr/src/wordpress/wp-secrets.php \
     && chmod 660 /usr/src/wordpress/wp-secrets.php \
     && curl -sfo /usr/local/bin/wp -L https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
-    && chmod +x /usr/local/bin/wp 
+    && chmod +x /usr/local/bin/wp
 
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT [ "/entrypoint.sh" ]
