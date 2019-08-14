@@ -9,9 +9,9 @@ RUN set -x \
     && adduser -u 82 -D -S -G www-data www-data
 
 RUN apk --no-cache add php7 php7-fpm php7-mysqli php7-json php7-openssl php7-curl \
-    php7-simplexml php7-ctype php7-mbstring php7-gd nginx=1.16.0-r2 supervisor ncurses curl \
-    php7-zlib php7-xml php7-phar php7-intl php7-dom php7-xmlreader php7-xmlwriter \
-    bash libpng libjpeg-turbo \
+    php7-simplexml php7-ctype php7-mbstring php7-gd nginx=1.16.0-r2 supervisor curl \
+    php7-zlib php7-xml php7-phar php7-intl php7-dom php7-xmlreader \
+    libpng libjpeg-turbo bash \
     && rm -rf /var/www/localhost
 
 VOLUME /var/www/wp-content
@@ -28,7 +28,7 @@ RUN mkdir -p /usr/src/wordpress \
     && ln -s /var/www/images/ /usr/src/wordpress/images \
     && chown -R www-data:www-data /usr/src/wordpress \
     && sed -i s/'user = nobody'/'user = www-data'/g /etc/php7/php-fpm.d/www.conf \
-    && sed -i s/'group = nobodoy'/'group = www-data'/g /etc/php7/php-fpm.d/www.conf
+    && sed -i s/'group = nobody'/'group = www-data'/g /etc/php7/php-fpm.d/www.conf
 
 COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/fpm-pool.conf /etc/php7/php-fpm.d/fpm-pool.conf
@@ -52,4 +52,4 @@ ENTRYPOINT [ "/entrypoint.sh" ]
 
 EXPOSE 80
 
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
