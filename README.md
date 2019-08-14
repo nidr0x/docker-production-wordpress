@@ -1,6 +1,6 @@
 # WordPress Docker Container
 
-This Dockerfile installs WordPress 5x (with latest WP-CLI), nginx 1.14 and php-fpm 7.2 (ondemand PM) over Alpine Linux. Currently using it on multiple heavy load production sites without any problems.
+This Dockerfile installs WordPress 5x (with latest WP-CLI), nginx 1.16 and php-fpm 7.3 (ondemand PM) over Alpine Linux. Currently using it on multiple heavy load production sites without any problems.
 
 Attached wp-config.php in this container is designed to use with configuration parameters as a environments variables, making its management lot easier.
 
@@ -12,7 +12,7 @@ Currently image size is 152 MB, but the goal of this project is to slim it as po
 
 If you want to get this docker image, just puill from the Docker registry
 
-    $ docker pull nidr0x/wordpress:latest 
+    $ docker pull nidr0x/wordpress:latest
 
 ## Using with Docker-Compose
 
@@ -22,7 +22,7 @@ If you want to spin a running environment, you can do it vía docker-compose
 
 Please note: Attached docker-compose is focused on production environment, which is why it has Traefik with SSL via Letsencrypt.
 
-## References 
+## References
 
 * https://github.com/docker-library/wordpress
 * https://codeable.io/wordpress-developers-intro-to-docker-part-one/
