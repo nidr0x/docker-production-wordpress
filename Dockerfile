@@ -28,7 +28,7 @@ RUN mkdir -p /usr/src/wordpress \
     && ln -s /var/www/images/ /usr/src/wordpress/images \
     && chown -R www-data:www-data /usr/src/wordpress \
     && sed -i s/'user = nobody'/'user = www-data'/g /etc/php7/php-fpm.d/www.conf \
-    && sed -i s/'group = nobodoy'/'group = www-data'/g /etc/php7/php-fpm.d/www.conf
+    && sed -i s/'group = nobody'/'group = www-data'/g /etc/php7/php-fpm.d/www.conf
 
 COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/fpm-pool.conf /etc/php7/php-fpm.d/fpm-pool.conf
