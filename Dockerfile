@@ -2,7 +2,7 @@ FROM alpine:3.10
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
       Description="WP container in Debian Linux with nginx 1.16.0 and latest stable PHP-FPM 7x"
 
-ENV WP_VERSION 5.1.1
+ENV WP_VERSION 5.2
 
 RUN set -x \
     && addgroup -g 82 -S www-data \
