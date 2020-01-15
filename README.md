@@ -20,7 +20,7 @@ If you want to spin a running environment, you can do it vía docker-compose
 
     $ docker-compose up
 
-Please note: Attached docker-compose is focused on production environment, which is why it has Traefik with SSL via Letsencrypt.
+Please note: Attached docker-compose is focused on production environment, so you can use Letsencrypt or your own files to manage your certificates. Also, if you want to inject files like robots.txt in container, you can put inside `rootfs/` folder.
 
 ## References
 
