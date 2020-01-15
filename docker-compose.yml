@@ -1,99 +1,91 @@
 version: '3.7'
 
 volumes:
-  vol-wp-content:  
+  vol-wp-content:
   vol-wp-images:
-  vol-wp-db: 
+  vol-wp-db:
+  redis-data:
 
 networks:
   frontend:
-    name: frontend
     external: true
   backend:
-    name: backend
- 
+    driver: bridge
+
 services:
-  balancer:
-    image: traefik:latest
-    container_name: traefik
+  reverse-proxy:
+    image: traefik:1.7-alpine
+    restart: unless-stopped
+    container_name: reverse-proxy
     networks:
-      - backend
       - frontend
+      - backend
+    command: --docker
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080"  
     labels:
-      - "traefik.docker.network=frontend"
-      - "traefik.enable=true"
-      - "traefik.frontend.rule=Host:test.com"
+      - "traefik.frontend.rule=Host:web.com,www.web.com"
+      - "traefik.docker.network=backend"
       - "traefik.port=8080"
-      - "traefik.backend.healthcheck.path=/index.php"
-    restart: always
-    environment:
-      - LEXICON_SLEEP_TIME=60
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./traefik/traefik.toml:/etc/traefik/traefik.toml
-      - ./traefik/acme/acme.json:/acme.json
+      - /var/run/docker.sock:/var/run/docker.sock 
+      - ./traefik.toml:/traefik.toml
+      - ./certs:/certs
 
-  db:
-    image: mariadb:latest
-    container_name: mariadb 
+  redis:
+    image: 'bitnami/redis:5.0'
     networks:
       - backend
-    restart: always
+    container_name: redis
+    restart: unless-stopped
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - '127.0.0.1:6379:6379'
+    volumes:
+      - 'redis-data:/bitnami/redis/data'
+    labels:
+      - "traefik.enable=false"
+
+ db:
+    image: mariadb:10.4
+    container_name: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - backend
+    restart: unless-stopped
+    env_file:
+      - .env
     volumes:
       - vol-wp-db:/var/lib/mysql
+      - ./config/my.cnf:/etc/mysql/conf.d/zzz_my.cnf
     ports:
-      - "3306:3306" 
+      - "127.0.0.1:3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=db
     labels:
-      - "traefik.enable=false" 
+      - "traefik.enable=false"
 
   wordpress:
     depends_on:
       - db
     networks:
       - backend
-      - frontend
     container_name: wordpress
+    env_file:
+      - .env
     build: ./
+    ports:
+      - "127.0.0.1:8081:80"
     volumes:
       - vol-wp-content:/var/www/wp-content
-      - vol-wp-images:/var/www/images
-    environment:
-      DISABLE_WP_CRON: "true"
-      TABLE_PREFIX: wp_
-      FS_METHOD: direct
-      WP_DEBUG: "true"
+      - vol-wp-images:/usr/src/wordpress/images
     labels:
-      - "traefik.enable=true" 
-      - "traefik.docker.network=frontend"
-      - "traefik.frontend.rule=Host:test.com,www.test.com"  
-      - "traefik.frontend.redirect.regex=^https?://test.com/(.*)"
-      - "traefik.frontend.redirect.replacement=https://www.test.com/$${1}"
-      - "traefik.frontend.headers.SSLRedirect=true"
-      - "traefik.frontend.headers.STSSeconds=315360000"
-      - "traefik.frontend.headers.browserXSSFilter=true"
-      - "traefik.frontend.headers.contentTypeNosniff=true"
-      - "traefik.frontend.headers.forceSTSHeader=true"
-      - "traefik.acme.domains=test.com,www.test.com"
+      - "traefik.backend=wordpress"
+      - "traefik.frontend.rule=Host:web.com,www.web.com"
+      - "traefik.docker.network=backend"
+      - "traefik.frontend.protocol=https"
+      - "traefik.enable=true"
 
-  watchtower:
-    image: v2tec/watchtower:latest
-    container_name: watchtower
-    command: --cleanup --schedule "0 0 0 * * *"
-    restart: always
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    labels:
-      - "traefik.enable=false"
 
-  mail:
-    image: bytemark/smtp
-    container_name: wp-smtp
-    restart: always
-    networks:
-      - frontend
-    labels:
-      - "traefik.enable=false"
