@@ -1,0 +1,17 @@
+name: Publish Docker
+on:
+  push:
+    tags:
+      - v5.*
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Publish to Docker Registry
+      uses: elgohr/Publish-Docker-Github-Action@master
+      with:
+        name: nidr0x/wordpress
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        tag_name: true
