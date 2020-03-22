@@ -1,8 +1,13 @@
-FROM alpine:3.11
+FROM alpine:3.11 AS download
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
       Description="WP container in Alpine Linux with nginx 1.16.0 and latest stable PHP-FPM 7x"
 
-ENV WP_VERSION 5.3
+ENV WP_VERSION 5.3.2
+
+RUN apk --no-cache add curl \
+    && curl -sfo /root/wordpress.tar.gz -L https://wordpress.org/wordpress-${WP_VERSION}.tar.gz
+
+FROM alpine:3.11
 
 RUN set -x \
     && addgroup -g 82 -S www-data \
@@ -27,14 +32,19 @@ VOLUME /var/www/wp-content
 RUN chown -R www-data:www-data /var/www
 
 WORKDIR /usr/src
-RUN mkdir -p /usr/src/wordpress \
-    && curl -sfo /usr/src/wordpress.tar.gz  -L https://wordpress.org/wordpress-${WP_VERSION}.tar.gz  \
-    && tar -xzf /usr/src/wordpress.tar.gz \
+
+RUN mkdir -p /usr/src/wordpress
+
+COPY --from=download /root/wordpress.tar.gz /usr/src/wordpress.tar.gz
+
+RUN tar -xzf /usr/src/wordpress.tar.gz \
     && rm -rf /usr/src/wordpress.tar.gz \
     && rm -rf /usr/src/wordpress/wp-content \
     && chown -R www-data:www-data /usr/src/wordpress \
     && sed -i s/'user = nobody'/'user = www-data'/g /etc/php7/php-fpm.d/www.conf \
-    && sed -i s/'group = nobody'/'group = www-data'/g /etc/php7/php-fpm.d/www.conf
+    && sed -i s/'group = nobody'/'group = www-data'/g /etc/php7/php-fpm.d/www.conf \
+    && sed -i "s/nginx:x:100:101:nginx:\/var\/lib\/nginx:\/sbin\/nologin/nginx:x:100:101:nginx:\/usr:\/bin\/bash/g" /etc/passwd \
+    && ln -s /sbin/php-fpm7 /sbin/php-fpm
 
 COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/fpm-pool.conf /etc/php7/php-fpm.d/zzz_custom_fpm_pool.conf
@@ -53,7 +63,8 @@ RUN rm -rf /tmp/* \
     && chmod 660 /usr/src/wordpress/wp-secrets.php \
     && chmod 600 /etc/crontabs/www-data \
     && curl -sfo /usr/local/bin/wp -L https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
-    && chmod +x /usr/local/bin/wp
+    && chmod +x /usr/local/bin/wp \
+    && chown nginx:nginx /usr/local/bin/wp
 
 WORKDIR /var/www/wp-content
 
