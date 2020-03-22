@@ -1,6 +1,6 @@
 name: Publish Docker
 on: [push]
-jobswordpress:
+jobs:
   build:
     runs-on: ubuntu-latest
     steps:
