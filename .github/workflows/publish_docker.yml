@@ -11,4 +11,4 @@ jobs:
         name: nidr0x/wordpress
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-        tag_semver: true
+        tag_name: true
