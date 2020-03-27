@@ -11,12 +11,11 @@ FROM alpine:3.11
 
 RUN set -x \
     && addgroup -g 82 -S www-data \
-    && adduser -u 82 -D -S -G www-data www-data
-
-RUN apk --no-cache add php7 php7-fpm php7-mysqli php7-json php7-openssl php7-curl \
-    php7-simplexml php7-ctype php7-mbstring php7-gd php7-redis nginx~=1.16 supervisor curl \
-    php7-zlib php7-xml php7-phar php7-intl php7-dom php7-xmlreader php7-opcache less mariadb-client \
-    libpng libjpeg-turbo bash \
+    && adduser -u 82 -D -S -G www-data www-data \
+    && apk --no-cache add php7 php7-fpm php7-mysqli php7-json php7-openssl php7-curl \
+       php7-simplexml php7-ctype php7-mbstring php7-gd php7-redis nginx~=1.16 supervisor curl \
+       php7-zlib php7-xml php7-phar php7-intl php7-dom php7-xmlreader php7-opcache less mariadb-client \
+       libpng libjpeg-turbo bash \
     && rm -rf /var/www/localhost
 
 RUN { \
@@ -37,7 +36,8 @@ RUN mkdir -p /usr/src/wordpress
 
 COPY --from=download /root/wordpress.tar.gz /usr/src/wordpress.tar.gz
 
-RUN tar -xzf /usr/src/wordpress.tar.gz \
+RUN set -x \
+    && tar -xzf /usr/src/wordpress.tar.gz \
     && rm -rf /usr/src/wordpress.tar.gz \
     && rm -rf /usr/src/wordpress/wp-content \
     && chown -R www-data:www-data /usr/src/wordpress \
@@ -56,7 +56,8 @@ COPY wp-secrets.php /usr/src/wordpress
 COPY rootfs/* /usr/src/wordpress/
 COPY config/cron.conf /etc/crontabs/www-data
 
-RUN rm -rf /tmp/* \
+RUN set -x \
+    && rm -rf /tmp/* \
     && chown www-data:www-data /usr/src/wordpress/wp-config.php \
     && chmod 660 /usr/src/wordpress/wp-config.php \
     && chown www-data:www-data /usr/src/wordpress/wp-secrets.php \
@@ -64,6 +65,7 @@ RUN rm -rf /tmp/* \
     && chmod 600 /etc/crontabs/www-data \
     && curl -sfo /usr/local/bin/wp -L https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
     && chmod +x /usr/local/bin/wp \
+    && wp core verify-checksums --path=/usr/src/wordpress \
     && chown nginx:nginx /usr/local/bin/wp
 
 WORKDIR /var/www/wp-content
