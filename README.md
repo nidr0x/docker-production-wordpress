@@ -1,6 +1,6 @@
 # WordPress Docker Container
 
-This Dockerfile installs WordPress 5x (with latest WP-CLI), nginx 1.16 and php-fpm 7.3 (ondemand PM) over Alpine Linux. Currently using it on multiple heavy load production sites without any problems.
+This Dockerfile installs WordPress 5x (with latest WP-CLI), nginx 1.16 and php-fpm 7.3 (ondemand PM) over Alpine Linux. Currently using it on multiple heavy load production sites without any issues.
 
 Attached wp-config.php in this container is designed to use with configuration parameters as a environments variables, making its management lot easier.
 
