@@ -6,7 +6,7 @@ Attached wp-config.php in this container is designed to use with configuration p
 
 nginx configuration has a lot of tweaks, and this container run a cron via system instead of WP cron because is not very reliable.
 
-Currently image size is 215 MB, but the goal of this project is to slim it as possible.
+Currently image size is 183 MB, but the goal of this project is to slim it as possible.
 
 ## Installing
 
