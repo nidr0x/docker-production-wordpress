@@ -33,23 +33,8 @@ services:
       - ./traefik.toml:/traefik.toml
       - ./certs:/certs
 
-  redis:
-    image: 'bitnami/redis:5.0'
-    networks:
-      - backend
-    container_name: redis
-    restart: unless-stopped
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-    ports:
-      - '127.0.0.1:6379:6379'
-    volumes:
-      - 'redis-data:/bitnami/redis/data'
-    labels:
-      - "traefik.enable=false"
-
   db:
-    image: mariadb:10.4
+    image: mariadb:10.5
     container_name: mysql
     command: --default-authentication-plugin=mysql_native_password
     networks:
