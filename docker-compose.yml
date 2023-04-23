@@ -1,0 +1,62 @@
+version: '3.7'
+
+volumes:
+  vol-wp-content:
+  vol-wp-images:
+  vol-wp-db:
+
+networks:
+  traefik_proxy:
+  default:
+    driver: bridge
+
+services:
+  traefik:
+    image: traefik:2.10
+    container_name: traefik
+    restart: unless-stopped
+    networks:
+      - traefik_proxy
+      - default
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+  db:
+    image: mariadb:10.11
+    container_name: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - vol-wp-db:/var/lib/mysql
+      - ./config/my.cnf:/etc/mysql/conf.d/zzz_my.cnf
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    ports:
+      - "127.0.0.1:3306:3306"
+
+  wordpress:
+    depends_on:
+      - db
+    networks:
+      - default
+      - traefik_proxy
+    container_name: wordpress
+    restart: always
+    env_file:
+      - .env
+    build: ./
+    ports:
+      - "127.0.0.1:8081:8080"
+    volumes:
+      - vol-wp-content:/var/www/wp-content
+      - vol-wp-images:/usr/src/wordpress/images
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./rootfs:/data
