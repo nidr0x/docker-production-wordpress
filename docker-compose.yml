@@ -4,71 +4,95 @@ volumes:
   vol-wp-content:
   vol-wp-images:
   vol-wp-db:
-  redis-data:
 
 networks:
-  frontend:
+  traefik:
     external: true
   backend:
-    driver: bridge
 
 services:
-  reverse-proxy:
-    image: traefik:1.7-alpine
+
+  traefik:
+    image: traefik:2.10
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    container_name: traefik
     restart: unless-stopped
-    container_name: reverse-proxy
     networks:
-      - frontend
-      - backend
-    command: --docker
+      - traefik
     ports:
       - "80:80"
       - "443:443"
-    labels:
-      - "traefik.frontend.rule=Host:web.com,www.web.com"
-      - "traefik.docker.network=backend"
-      - "traefik.port=8080"
+      - "8080:8080"
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web-secure.address=:443"
+      - "--certificatesresolvers.myhttpchallenge.acme.httpchallenge=true"
+      - "--certificatesresolvers.myhttpchallenge.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myhttpchallenge.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.myhttpchallenge.acme.email=me@mail.com"
+      - "--certificatesresolvers.myhttpchallenge.acme.storage=/letsencrypt/acme.json"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock 
-      - ./traefik.toml:/traefik.toml
-      - ./certs:/certs
+      - "./letsencrypt:/letsencrypt"
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
 
   db:
-    image: mariadb:10.5
+    image: mariadb:10.11
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: mysql
     command: --default-authentication-plugin=mysql_native_password
-    networks:
-      - backend
     restart: unless-stopped
     env_file:
       - .env
     volumes:
       - vol-wp-db:/var/lib/mysql
       - ./config/my.cnf:/etc/mysql/conf.d/zzz_my.cnf
-    ports:
-      - "127.0.0.1:3306:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=db
-    labels:
-      - "traefik.enable=false"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    networks:
+      - backend
 
   wordpress:
     depends_on:
       - db
     networks:
+      - traefik
       - backend
     container_name: wordpress
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: always
     env_file:
       - .env
     build: ./
     ports:
-      - "127.0.0.1:8081:80"
+      - "127.0.0.1:8081:8080"
     volumes:
       - vol-wp-content:/var/www/wp-content
       - vol-wp-images:/usr/src/wordpress/images
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./rootfs:/data
     labels:
-      - "traefik.backend=wordpress"
-      - "traefik.frontend.rule=Host:web.com,www.web.com"
-      - "traefik.docker.network=backend"
-      - "traefik.frontend.protocol=https"
       - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.wordpresscp.rule=Host(`mywp.com`)"
+      - "traefik.http.routers.wordpresscp.entrypoints=web"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.wordpresscp.middlewares=redirect-to-https@docker"
+      - "traefik.http.routers.wordpresscp-secured.rule=Host(`mywp.com`)"
+      - "traefik.http.routers.wordpresscp-secured.entrypoints=web-secure"
+      - "traefik.http.routers.wordpresscp-secured.tls=true"
+      - "traefik.http.routers.wordpresscp-secured.tls.certresolver=myhttpchallenge"
+
