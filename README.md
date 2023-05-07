@@ -1,26 +1,39 @@
-# WordPress Docker Container
+# rootless WordPress Docker Container
 
-This Dockerfile installs WordPress 5x (with latest WP-CLI), nginx 1.16 and php-fpm 7.3 (ondemand PM) over Alpine Linux. Currently using it on multiple heavy load production sites without any issues.
+This Dockerfile installs WordPress 6.x, along with the latest [wp-cli](https://wp-cli.org/) (used to download the WordPress as well), supervisor, nginx 1.24, and PHP-FPM 8.1 (on-demand PM) on Alpine Linux. It's designed as a rootless image, for heavy-load production sites and is currently being used in multiple environments without any issues.
 
-Attached wp-config.php in this container is designed to use with configuration parameters as a environments variables, making its management lot easier.
+The `wp-config.php` file included in this container is configured to use environmental variables, making management much easier. The nginx configuration has also been heavily tweaked and optimized. Additionally, the container runs a system cron instead of WP cron, as the latter is not very reliable.
 
-nginx configuration has a lot of tweaks, and this container run a cron via system instead of WP cron because is not very reliable.
+Also, it has a script managed by `supervisor` process which copies all data automatically from `/data` and put into `/usr/src/wordpress` if you want to add files to the root folder, like `robots.txt`.
 
-Currently image size is 183 MB, but the goal of this project is to slim it as possible.
+The current image size is around 80 MB, and the goal of this project is to make it even smaller.
 
-## Installing
+## Prerequisites
 
-If you want to get this docker image, just puill from the Docker registry
+Before using this Docker image, make sure you have the following software installed:
 
-    $ docker pull nidr0x/wordpress:latest
+- Docker
+- docker-compose
 
-## Using with Docker-Compose
+## Usage
 
-If you want to spin a running environment, you can do it vía docker-compose
+To obtain this Docker image, simply pull it from the GHCR.
 
-    $ docker-compose up
+```
+    $ docker pull ghcr.io/nidr0x/wordpress:latest
+```
 
-Please note: Attached docker-compose is focused on production environment, so you can use Letsencrypt or your own files to manage your certificates. Also, if you want to inject files like robots.txt in container, you can put inside `rootfs/` folder.
+## Usage with Docker-Compose
+
+If you wish to spin up a running environment, you can use docker-compose.
+
+```
+    $ docker-compose up -d
+```
+
+## Contribution
+
+If you would like to contribute to this project, feel free to open an issue or submit a pull request on GitHub.
 
 ## References
 
@@ -29,3 +42,4 @@ Please note: Attached docker-compose is focused on production environment, so yo
 * https://codeable.io/wordpress-developers-intro-to-docker-part-two/
 * https://github.com/TrafeX/docker-php-nginx/
 * https://hub.docker.com/_/wordpress/
+
