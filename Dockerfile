@@ -1,22 +1,53 @@
-FROM alpine:3.11 AS download
-LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
-      Description="WP container in Alpine Linux with nginx 1.16.0 and latest stable PHP-FPM 7x"
+FROM alpine:3.17 AS download
 
-ENV WP_VERSION 5.4
+ENV WPCLI_DOWNLOAD_SHA256 bbf096bccc6b1f3f1437e75e3254f0dcda879e924bbea403dff3cfb251d4e468
 
-RUN apk --no-cache add curl \
-    && curl -sfo /root/wordpress.tar.gz -L https://wordpress.org/wordpress-${WP_VERSION}.tar.gz
-
-FROM alpine:3.11
+RUN apk add --no-cache \
+    curl \ 
+    coreutils
 
 RUN set -x \
-    && addgroup -g 82 -S www-data \
-    && adduser -u 82 -D -S -G www-data www-data \
-    && apk --no-cache add php7 php7-fpm php7-mysqli php7-json php7-openssl php7-curl \
-       php7-simplexml php7-ctype php7-mbstring php7-gd php7-exif nginx~=1.16 supervisor curl \
-       php7-zlib php7-xml php7-phar php7-intl php7-dom php7-xmlreader php7-zip php7-opcache less \
-       bash \
-    && rm -rf /var/www/localhost
+    && curl -sfo /tmp/wp -L https://github.com/wp-cli/wp-cli/releases/download/v2.7.1/wp-cli-2.7.1.phar \
+    && echo "$WPCLI_DOWNLOAD_SHA256 /tmp/wp" | sha256sum -c -
+
+RUN set -x \
+    && curl -f https://api.wordpress.org/secret-key/1.1/salt/ >> /tmp/wp-secrets.php
+
+FROM alpine:3.17
+
+LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
+      Description="Slim WordPress image using Alpine Linux"
+
+ENV WP_VERSION 6.2
+ENV WP_LOCALE en_US
+
+ARG UID=82
+ARG GID=82
+
+RUN adduser -u $UID -D -S -G www-data www-data \
+    && apk add --no-cache \
+       php81 \
+       php81-fpm \
+       php81-mysqli \
+       php81-json \
+       php81-openssl \
+       php81-curl \
+       php81-simplexml \
+       php81-ctype \
+       php81-mbstring \
+       php81-gd \
+       php81-exif \
+       nginx \
+       supervisor \
+       php81-zlib \
+       php81-xml \
+       php81-phar \
+       php81-intl \
+       php81-dom \
+       php81-xmlreader \
+       php81-zip \
+       php81-opcache \
+       less
 
 RUN { \
 		echo 'opcache.memory_consumption=128'; \
@@ -24,57 +55,54 @@ RUN { \
 		echo 'opcache.max_accelerated_files=4000'; \
 		echo 'opcache.revalidate_freq=2'; \
 		echo 'opcache.fast_shutdown=1'; \
-	} > /etc/php7/conf.d/opcache-recommended.ini
+	} > /etc/php81/conf.d/opcache-recommended.ini
 
 VOLUME /var/www/wp-content
 
-RUN set -x \ 
-    && chown -R www-data:www-data /var/www \
-    && mkdir -p /usr/src/wordpress
-
 WORKDIR /usr/src
 
-COPY --from=download /root/wordpress.tar.gz /usr/src/wordpress.tar.gz
-
 RUN set -x \
-    && tar -xzf /usr/src/wordpress.tar.gz \
-    && rm -rf /usr/src/wordpress.tar.gz \
-    && rm -rf /usr/src/wordpress/wp-content \
-    && chown -R www-data:www-data /usr/src/wordpress \
-    && sed -i s/';cgi.fix_pathinfo=1/cgi.fix_pathinfo=0'/g /etc/php7/php.ini \
-    && sed -i s/'expose_php = On/expose_php = Off'/g /etc/php7/php.ini \
-    && sed -i s/'user = nobody'/'user = www-data'/g /etc/php7/php-fpm.d/www.conf \
-    && sed -i s/'group = nobody'/'group = www-data'/g /etc/php7/php-fpm.d/www.conf \
-    && sed -i "s/nginx:x:100:101:nginx:\/var\/lib\/nginx:\/sbin\/nologin/nginx:x:100:101:nginx:\/usr:\/bin\/bash/g" /etc/passwd \
-    && ln -s /sbin/php-fpm7 /sbin/php-fpm
+    && mkdir /usr/src/wordpress \
+    && chown -R $UID:$GID /usr/src/wordpress \
+    && sed -i s/';cgi.fix_pathinfo=1/cgi.fix_pathinfo=0'/g /etc/php81/php.ini \
+    && sed -i s/'expose_php = On/expose_php = Off'/g /etc/php81/php.ini \
+    && ln -s /sbin/php-fpm81 /sbin/php-fpm
 
 COPY config/nginx.conf /etc/nginx/nginx.conf
-COPY config/fpm-pool.conf /etc/php7/php-fpm.d/zzz_custom_fpm_pool.conf
-COPY config/php.ini /etc/php7/conf.d/zzz_custom_php.ini
+COPY config/fpm-pool.conf /etc/php81/php-fpm.d/zzz_custom_fpm_pool.conf
+COPY config/php.ini /etc/php81/conf.d/zzz_custom_php.ini
 COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY config/nginx_includes/* /etc/nginx/includes/
 COPY wp-config.php /usr/src/wordpress
-COPY wp-secrets.php /usr/src/wordpress
-COPY rootfs/* /usr/src/wordpress/
-COPY config/cron.conf /etc/crontabs/www-data
+COPY rootfs.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/rootfs.sh
+COPY --from=download /tmp/wp /usr/local/bin/wp
+COPY --from=download /tmp/wp-secrets.php /usr/src/wordpress/wp-secrets.php
 
 RUN set -x \
+    && chown -R $UID:$GID /etc/nginx \
+    && chown -R $UID:$GID /var/lib/nginx \
+    && chmod -R g+w /etc/nginx \
+    && chmod g+wx /var/log/ \
+    && ln -sf /dev/stderr /var/lib/nginx/logs/error.log \
+    && deluser nginx \
     && rm -rf /tmp/* \
-    && chown www-data:www-data /usr/src/wordpress/wp-config.php \
     && chmod 660 /usr/src/wordpress/wp-config.php \
-    && chown www-data:www-data /usr/src/wordpress/wp-secrets.php \
-    && chmod 660 /usr/src/wordpress/wp-secrets.php \
-    && chmod 600 /etc/crontabs/www-data \
-    && curl -sfo /usr/local/bin/wp -L https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+    && sed -i '1s/^/<?php \n/' /usr/src/wordpress/wp-secrets.php \
+    && rm -rf /var/www/localhost
+
+RUN set -x \
     && chmod +x /usr/local/bin/wp \
-    && chown nginx:nginx /usr/local/bin/wp \
-    && wp core verify-checksums --path=/usr/src/wordpress
+    && chown $UID:$GID /usr/local/bin/wp \
+    && wp core download --path=/usr/src/wordpress --version="${WP_VERSION}" --skip-content --locale="${WP_LOCALE}" \
+    && chown -hR $UID:$GID /usr/src/wordpress
 
 WORKDIR /var/www/wp-content
 
-COPY entrypoint.sh /entrypoint.sh
-ENTRYPOINT [ "/entrypoint.sh" ]
+EXPOSE 8080
 
-EXPOSE 80
+USER $UID
+
+STOPSIGNAL SIGQUIT
 
 CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
