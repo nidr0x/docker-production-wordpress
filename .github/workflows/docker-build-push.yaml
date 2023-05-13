@@ -17,9 +17,6 @@ jobs:
   build-and-push:
     name: Build and push
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        platform: [linux/amd64, linux/arm64]
 
     steps:
     - name: Checkout repo
@@ -46,19 +43,20 @@ jobs:
 
     - uses: oprypin/find-latest-tag@v1
       with:
-        repository: nidr0x/docker-production-wordpress  # The repository to scan.
-        releases-only: true  # We know that all relevant tags have a GitHub release for them.
-      id: wordpress  # The step ID to refer to later.
+        repository: nidr0x/docker-production-wordpress
+        releases-only: true
+      id: wordpress
 
     - name: Build Docker image
       uses: docker/build-push-action@v4
       with:
         context: .
         push: true
-        platforms: ${{ matrix.platform }}
+        platforms: linux/amd64, linux/386, linux/arm/v6, linux/arm/v7, linux/arm64
         tags: |
           ${{ env.REGISTRY }}/${{ env.USER }}/${{ env.IMAGE_NAME }}:${{ steps.wordpress.outputs.tag }}
           ${{ env.REGISTRY }}/${{ env.USER }}/${{ env.IMAGE_NAME }}:latest
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+
