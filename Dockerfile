@@ -1,4 +1,4 @@
-FROM alpine:3.17 AS download
+FROM alpine:3.18 AS download
 
 ENV WPCLI_DOWNLOAD_SHA256 bbf096bccc6b1f3f1437e75e3254f0dcda879e924bbea403dff3cfb251d4e468
 
@@ -13,7 +13,7 @@ RUN set -x \
 RUN set -x \
     && curl -f https://api.wordpress.org/secret-key/1.1/salt/ >> /tmp/wp-secrets.php
 
-FROM alpine:3.17
+FROM alpine:3.18
 
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
       Description="Slim WordPress image using Alpine Linux"
