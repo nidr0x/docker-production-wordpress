@@ -16,6 +16,9 @@ jobs:
   build-and-push:
     name: Build and push
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [linux/amd64, linux/arm64]
 
     steps:
     - name: Checkout repo
@@ -42,7 +45,7 @@ jobs:
       with:
         context: .
         push: true
-        platforms: linux/arm64,linux/amd64
+        platforms: ${{ matrix.platform }}
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref }}
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
