@@ -18,7 +18,7 @@ FROM alpine:3.18
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
       Description="Slim WordPress image using Alpine Linux"
 
-ENV WP_VERSION 6.2
+ENV WP_VERSION 6.2.1
 ENV WP_LOCALE en_US
 
 ARG UID=82
