@@ -26,27 +26,27 @@ ARG GID=82
 
 RUN adduser -u $UID -D -S -G www-data www-data \
     && apk add --no-cache \
-       php81 \
-       php81-fpm \
-       php81-mysqli \
-       php81-json \
-       php81-openssl \
-       php81-curl \
-       php81-simplexml \
-       php81-ctype \
-       php81-mbstring \
-       php81-gd \
-       php81-exif \
+       php82 \
+       php82-fpm \
+       php82-mysqli \
+       php82-json \
+       php82-openssl \
+       php82-curl \
+       php82-simplexml \
+       php82-ctype \
+       php82-mbstring \
+       php82-gd \
+       php82-exif \
        nginx \
        supervisor \
-       php81-zlib \
-       php81-xml \
-       php81-phar \
-       php81-intl \
-       php81-dom \
-       php81-xmlreader \
-       php81-zip \
-       php81-opcache \
+       php82-zlib \
+       php82-xml \
+       php82-phar \
+       php82-intl \
+       php82-dom \
+       php82-xmlreader \
+       php82-zip \
+       php82-opcache \
        less
 
 RUN { \
@@ -55,7 +55,7 @@ RUN { \
 		echo 'opcache.max_accelerated_files=4000'; \
 		echo 'opcache.revalidate_freq=2'; \
 		echo 'opcache.fast_shutdown=1'; \
-	} > /etc/php81/conf.d/opcache-recommended.ini
+	} > /etc/php82/conf.d/opcache-recommended.ini
 
 VOLUME /var/www/wp-content
 
@@ -64,13 +64,13 @@ WORKDIR /usr/src
 RUN set -x \
     && mkdir /usr/src/wordpress \
     && chown -R $UID:$GID /usr/src/wordpress \
-    && sed -i s/';cgi.fix_pathinfo=1/cgi.fix_pathinfo=0'/g /etc/php81/php.ini \
-    && sed -i s/'expose_php = On/expose_php = Off'/g /etc/php81/php.ini \
-    && ln -s /sbin/php-fpm81 /sbin/php-fpm
+    && sed -i s/';cgi.fix_pathinfo=1/cgi.fix_pathinfo=0'/g /etc/php82/php.ini \
+    && sed -i s/'expose_php = On/expose_php = Off'/g /etc/php82/php.ini \
+    && ln -s /usr/bin/php82 /usr/bin/php
 
 COPY config/nginx.conf /etc/nginx/nginx.conf
-COPY config/fpm-pool.conf /etc/php81/php-fpm.d/zzz_custom_fpm_pool.conf
-COPY config/php.ini /etc/php81/conf.d/zzz_custom_php.ini
+COPY config/fpm-pool.conf /etc/php82/php-fpm.d/zzz_custom_fpm_pool.conf
+COPY config/php.ini /etc/php82/conf.d/zzz_custom_php.ini
 COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY config/nginx_includes/* /etc/nginx/includes/
 COPY wp-config.php /usr/src/wordpress
