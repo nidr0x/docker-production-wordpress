@@ -66,7 +66,8 @@ RUN set -x \
     && chown -R $UID:$GID /usr/src/wordpress \
     && sed -i s/';cgi.fix_pathinfo=1/cgi.fix_pathinfo=0'/g /etc/php82/php.ini \
     && sed -i s/'expose_php = On/expose_php = Off'/g /etc/php82/php.ini \
-    && ln -s /usr/bin/php82 /usr/bin/php
+    && ln -s /usr/bin/php82 /usr/bin/php \
+    && ln -s /usr/sbin/php-fpm82 /usr/sbin/php-fpm
 
 COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/fpm-pool.conf /etc/php82/php-fpm.d/zzz_custom_fpm_pool.conf
