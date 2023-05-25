@@ -4,6 +4,7 @@ if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && 'https' == $_SERVER['HTTP_X_FOR
 }
 
 define('WP_CONTENT_DIR', '/var/www/wp-content');
+define('WP_AUTO_UPDATE_CORE', false );
 
 $table_prefix  = getenv('TABLE_PREFIX') ?: 'wp_';
 
