@@ -47,6 +47,8 @@ RUN adduser -u $UID -D -S -G www-data www-data \
        php82-xmlreader \
        php82-zip \
        php82-opcache \
+       php82-fileinfo \
+       php82-iconv \
        less
 
 RUN { \
