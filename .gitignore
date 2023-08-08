@@ -54,3 +54,5 @@ tags
 # Other stuff
 config/nginx_includes/*.conf
 letsencrypt/
+wp-content/
+images/
