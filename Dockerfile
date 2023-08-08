@@ -1,13 +1,13 @@
 FROM alpine:3.18 AS download
 
-ENV WPCLI_DOWNLOAD_SHA256 bbf096bccc6b1f3f1437e75e3254f0dcda879e924bbea403dff3cfb251d4e468
+ENV WPCLI_DOWNLOAD_SHA256 8503cd579480d0cb237b4bef35e0c3da11c2ab872a1bc8f26d2da0ca0729b6a7
 
 RUN apk add --no-cache \
     curl \ 
     coreutils
 
 RUN set -x \
-    && curl -sfo /tmp/wp -L https://github.com/wp-cli/wp-cli/releases/download/v2.7.1/wp-cli-2.7.1.phar \
+    && curl -sfo /tmp/wp -L https://github.com/wp-cli/wp-cli/releases/download/v2.8.1/wp-cli-2.8.1.phar \
     && echo "$WPCLI_DOWNLOAD_SHA256 /tmp/wp" | sha256sum -c -
 
 RUN set -x \
@@ -18,7 +18,7 @@ FROM alpine:3.18
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
       Description="Slim WordPress image using Alpine Linux"
 
-ENV WP_VERSION 6.2.2
+ENV WP_VERSION 6.3
 ENV WP_LOCALE en_US
 
 ARG UID=82
