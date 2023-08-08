@@ -43,7 +43,7 @@ services:
       - /etc/timezone:/etc/timezone:ro
 
   db:
-    image: mariadb:10.11
+    image: mariadb:11.0
     logging:
       options:
         max-size: "10m"
@@ -79,8 +79,8 @@ services:
     ports:
       - "127.0.0.1:8081:8080"
     volumes:
-      - vol-wp-content:/var/www/wp-content
-      - vol-wp-images:/usr/src/wordpress/images
+      - ./wp-content:/var/www/wp-content
+      - ./images:/usr/src/wordpress/images
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
       - ./rootfs:/data
