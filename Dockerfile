@@ -1,4 +1,4 @@
-FROM alpine:3.18 AS download
+FROM public.ecr.aws/docker/library/alpine:3.18 AS download
 
 ENV WPCLI_DOWNLOAD_SHA256 8503cd579480d0cb237b4bef35e0c3da11c2ab872a1bc8f26d2da0ca0729b6a7
 
@@ -13,12 +13,12 @@ RUN set -x \
 RUN set -x \
     && curl -f https://api.wordpress.org/secret-key/1.1/salt/ >> /tmp/wp-secrets.php
 
-FROM alpine:3.18
+FROM public.ecr.aws/docker/library/alpine:3.18
 
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
       Description="Slim WordPress image using Alpine Linux"
 
-ENV WP_VERSION 6.3.2
+ENV WP_VERSION 6.4.1
 ENV WP_LOCALE en_US
 
 ARG UID=82
