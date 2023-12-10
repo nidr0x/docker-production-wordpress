@@ -69,7 +69,7 @@ RUN set -x \
     && sed -i s/';cgi.fix_pathinfo=1/cgi.fix_pathinfo=0'/g /etc/php83/php.ini \
     && sed -i s/'expose_php = On/expose_php = Off'/g /etc/php83/php.ini \
     && ln -s /usr/bin/php83 /usr/bin/php \
-    && ln -s /usr/sbin/php-fpm82 /usr/sbin/php-fpm
+    && ln -s /usr/sbin/php-fpm83 /usr/sbin/php-fpm
 
 COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/fpm-pool.conf /etc/php83/php-fpm.d/zzz_custom_fpm_pool.conf
