@@ -1,14 +1,12 @@
 FROM public.ecr.aws/docker/library/alpine:3.19 AS download
 
-ENV WPCLI_DOWNLOAD_SHA256 af6b7ccc21ed0907cb504db5a059f0e120117905a6017bfdd4375cee3c93d864
+ENV WPCLI_DOWNLOAD_SHA256 4c6a93cecae7f499ca481fa7a6d6d4299c8b93214e5e5308e26770dbfd3631df
+ENV WPCLI_VERSION 2.10.0
 
-RUN apk add --no-cache \
-    curl \ 
-    coreutils
-
-RUN set -x \
-    && curl -sfo /tmp/wp -L https://github.com/wp-cli/wp-cli/releases/download/v2.9.0/wp-cli-2.9.0.phar \
-    && echo "$WPCLI_DOWNLOAD_SHA256 /tmp/wp" | sha256sum -c -
+RUN apk add --no-cache curl coreutils \
+    && curl -sfo /tmp/wp -L https://github.com/wp-cli/wp-cli/releases/download/v${WPCLI_VERSION}/wp-cli-${WPCLI_VERSION}.phar \
+    && echo "$WPCLI_DOWNLOAD_SHA256 /tmp/wp" | sha256sum -c - \
+    && rm -rf /var/cache/apk/*
 
 RUN set -x \
     && curl -f https://api.wordpress.org/secret-key/1.1/salt/ >> /tmp/wp-secrets.php
@@ -18,7 +16,7 @@ FROM public.ecr.aws/docker/library/alpine:3.19
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
       Description="Slim WordPress image using Alpine Linux"
 
-ENV WP_VERSION 6.5.2
+ENV WP_VERSION 6.5.3
 ENV WP_LOCALE en_US
 
 ARG UID=82
