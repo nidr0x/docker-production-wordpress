@@ -1,29 +1,29 @@
-FROM public.ecr.aws/docker/library/alpine:3.19 AS download
+FROM public.ecr.aws/docker/library/alpine:3.20 AS download
 
-ENV WPCLI_DOWNLOAD_SHA256 4c6a93cecae7f499ca481fa7a6d6d4299c8b93214e5e5308e26770dbfd3631df
-ENV WPCLI_VERSION 2.10.0
+ENV WPCLI_DOWNLOAD_SHA256=4c6a93cecae7f499ca481fa7a6d6d4299c8b93214e5e5308e26770dbfd3631df
+ENV WPCLI_VERSION=2.10.0
 
 RUN apk add --no-cache curl coreutils \
   && curl -sfo /tmp/wp -L https://github.com/wp-cli/wp-cli/releases/download/v${WPCLI_VERSION}/wp-cli-${WPCLI_VERSION}.phar \
   && echo "$WPCLI_DOWNLOAD_SHA256 /tmp/wp" | sha256sum -c - \
+  && chmod +x /tmp/wp \
   && rm -rf /var/cache/apk/*
 
 RUN set -x \
   && curl -f https://api.wordpress.org/secret-key/1.1/salt/ >> /tmp/wp-secrets.php
 
-FROM public.ecr.aws/docker/library/alpine:3.19
+FROM public.ecr.aws/docker/library/alpine:3.20
 
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
   Description="Slim WordPress image using Alpine Linux"
 
-ENV WP_VERSION 6.5.5
-ENV WP_LOCALE en_US
+ENV WP_VERSION=6.6
+ENV WP_LOCALE=en_US
 
 ARG UID=82
 ARG GID=82
 
-RUN adduser -u $UID -D -S -G www-data www-data \
-  && apk add --no-cache \
+RUN apk add --no-cache \
   php83 \
   php83-fpm \
   php83-mysqli \
@@ -66,7 +66,6 @@ RUN set -x \
   && chown -R $UID:$GID /usr/src/wordpress \
   && sed -i s/';cgi.fix_pathinfo=1/cgi.fix_pathinfo=0'/g /etc/php83/php.ini \
   && sed -i s/'expose_php = On/expose_php = Off'/g /etc/php83/php.ini \
-  && ln -s /usr/bin/php83 /usr/bin/php \
   && ln -s /usr/sbin/php-fpm83 /usr/sbin/php-fpm
 
 COPY config/nginx.conf /etc/nginx/nginx.conf
@@ -77,8 +76,8 @@ COPY config/nginx_includes/* /etc/nginx/includes/
 COPY wp-config.php /usr/src/wordpress
 COPY rootfs.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/rootfs.sh
-COPY --from=download /tmp/wp /usr/local/bin/wp
-COPY --from=download /tmp/wp-secrets.php /usr/src/wordpress/wp-secrets.php
+COPY --from=download --chown=${UID} /tmp/wp /usr/local/bin/wp
+COPY --from=download --chown=${UID} /tmp/wp-secrets.php /usr/src/wordpress/wp-secrets.php
 
 RUN set -x \
   && chown -R $UID:$GID /etc/nginx \
@@ -92,18 +91,16 @@ RUN set -x \
   && sed -i '1s/^/<?php \n/' /usr/src/wordpress/wp-secrets.php \
   && rm -rf /var/www/localhost
 
+USER ${UID}
+
 RUN set -x \
-  && chmod +x /usr/local/bin/wp \
-  && chown $UID:$GID /usr/local/bin/wp \
-  && wp core download --path=/usr/src/wordpress --version="${WP_VERSION}" --skip-content --locale="${WP_LOCALE}" \
-  && chown -hR $UID:$GID /usr/src/wordpress
+  && wp core download --path=/usr/src/wordpress --version="${WP_VERSION}" --skip-content --locale="${WP_LOCALE}"
 
 WORKDIR /var/www/wp-content
 
 EXPOSE 8080
 
-USER $UID
-
 STOPSIGNAL SIGQUIT
 
 CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
