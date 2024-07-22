@@ -23,7 +23,8 @@ ENV WP_LOCALE=en_US
 ARG UID=82
 ARG GID=82
 
-RUN apk add --no-cache \
+RUN adduser -u $UID -D -S -G www-data www-data \
+  && apk add --no-cache \
   php83 \
   php83-fpm \
   php83-mysqli \
