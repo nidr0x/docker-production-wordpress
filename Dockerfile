@@ -74,7 +74,7 @@ COPY config/fpm-pool.conf /etc/php83/php-fpm.d/zzz_custom_fpm_pool.conf
 COPY config/php.ini /etc/php83/conf.d/zzz_custom_php.ini
 COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY config/nginx_includes/* /etc/nginx/includes/
-COPY wp-config.php /usr/src/wordpress
+COPY --chown=${UID} wp-config.php /usr/src/wordpress
 COPY rootfs.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/rootfs.sh
 COPY --from=download --chown=${UID} /tmp/wp /usr/local/bin/wp
