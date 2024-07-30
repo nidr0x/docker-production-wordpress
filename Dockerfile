@@ -17,7 +17,7 @@ FROM public.ecr.aws/docker/library/alpine:3.20
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
   Description="Slim WordPress image using Alpine Linux"
 
-ENV WP_VERSION=6.6
+ENV WP_VERSION=6.6.1
 ENV WP_LOCALE=en_US
 
 ARG UID=82
