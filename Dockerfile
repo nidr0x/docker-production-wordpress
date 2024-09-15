@@ -1,7 +1,7 @@
 FROM public.ecr.aws/docker/library/alpine:3.20 AS download
 
-ENV WPCLI_DOWNLOAD_SHA256=4c6a93cecae7f499ca481fa7a6d6d4299c8b93214e5e5308e26770dbfd3631df
-ENV WPCLI_VERSION=2.10.0
+ENV WPCLI_DOWNLOAD_SHA256=a39021ac809530ea607580dbf93afbc46ba02f86b6cffd03de4b126ca53079f6
+ENV WPCLI_VERSION=2.11.0
 
 RUN apk add --no-cache curl coreutils \
   && curl -sfo /tmp/wp -L https://github.com/wp-cli/wp-cli/releases/download/v${WPCLI_VERSION}/wp-cli-${WPCLI_VERSION}.phar \
@@ -17,7 +17,7 @@ FROM public.ecr.aws/docker/library/alpine:3.20
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
   Description="Slim WordPress image using Alpine Linux"
 
-ENV WP_VERSION=6.6.1
+ENV WP_VERSION=6.6.2
 ENV WP_LOCALE=en_US
 
 ARG UID=82
