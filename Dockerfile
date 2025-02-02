@@ -1,18 +1,19 @@
-FROM public.ecr.aws/docker/library/alpine:3.20 AS download
+FROM curlimages/curl:8.6.0 AS download
+ENTRYPOINT []
+USER root
 
 ENV WPCLI_DOWNLOAD_SHA256=a39021ac809530ea607580dbf93afbc46ba02f86b6cffd03de4b126ca53079f6
 ENV WPCLI_VERSION=2.11.0
 
-RUN apk add --no-cache curl coreutils \
+RUN apk add --no-cache coreutils \
   && curl -sfo /tmp/wp -L https://github.com/wp-cli/wp-cli/releases/download/v${WPCLI_VERSION}/wp-cli-${WPCLI_VERSION}.phar \
   && echo "$WPCLI_DOWNLOAD_SHA256 /tmp/wp" | sha256sum -c - \
-  && chmod +x /tmp/wp \
-  && rm -rf /var/cache/apk/*
+  && chmod +x /tmp/wp
 
 RUN set -x \
   && curl -f https://api.wordpress.org/secret-key/1.1/salt/ >> /tmp/wp-secrets.php
 
-FROM public.ecr.aws/docker/library/alpine:3.20
+FROM public.ecr.aws/docker/library/alpine:3.21
 
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
   Description="Slim WordPress image using Alpine Linux"
@@ -25,29 +26,29 @@ ARG GID=82
 
 RUN adduser -u $UID -D -S -G www-data www-data \
   && apk add --no-cache \
-  php83 \
-  php83-fpm \
-  php83-mysqli \
-  php83-json \
-  php83-openssl \
-  php83-curl \
-  php83-simplexml \
-  php83-ctype \
-  php83-mbstring \
-  php83-gd \
-  php83-exif \
+  php84 \
+  php84-fpm \
+  php84-mysqli \
+  php84-json \
+  php84-openssl \
+  php84-curl \
+  php84-simplexml \
+  php84-ctype \
+  php84-mbstring \
+  php84-gd \
+  php84-exif \
   nginx \
   supervisor \
-  php83-zlib \
-  php83-xml \
-  php83-phar \
-  php83-intl \
-  php83-dom \
-  php83-xmlreader \
-  php83-zip \
-  php83-opcache \
-  php83-fileinfo \
-  php83-iconv \
+  php84-zlib \
+  php84-xml \
+  php84-phar \
+  php84-intl \
+  php84-dom \
+  php84-xmlreader \
+  php84-zip \
+  php84-opcache \
+  php84-fileinfo \
+  php84-iconv \
   less
 
 RUN { \
@@ -56,7 +57,7 @@ RUN { \
   echo 'opcache.max_accelerated_files=4000'; \
   echo 'opcache.revalidate_freq=2'; \
   echo 'opcache.fast_shutdown=1'; \
-  } > /etc/php83/conf.d/opcache-recommended.ini
+  } > /etc/php84/conf.d/opcache-recommended.ini
 
 VOLUME /var/www/wp-content
 
@@ -65,13 +66,14 @@ WORKDIR /usr/src
 RUN set -x \
   && mkdir /usr/src/wordpress \
   && chown -R $UID:$GID /usr/src/wordpress \
-  && sed -i s/';cgi.fix_pathinfo=1/cgi.fix_pathinfo=0'/g /etc/php83/php.ini \
-  && sed -i s/'expose_php = On/expose_php = Off'/g /etc/php83/php.ini \
-  && ln -s /usr/sbin/php-fpm83 /usr/sbin/php-fpm
+  && sed -i s/';cgi.fix_pathinfo=1/cgi.fix_pathinfo=0'/g /etc/php84/php.ini \
+  && sed -i s/'expose_php = On/expose_php = Off'/g /etc/php84/php.ini \
+  && ln -s /usr/sbin/php-fpm84 /usr/sbin/php-fpm \
+  && ln -s /usr/bin/php84 /usr/bin/php
 
 COPY config/nginx.conf /etc/nginx/nginx.conf
-COPY config/fpm-pool.conf /etc/php83/php-fpm.d/zzz_custom_fpm_pool.conf
-COPY config/php.ini /etc/php83/conf.d/zzz_custom_php.ini
+COPY config/fpm-pool.conf /etc/php84/php-fpm.d/zzz_custom_fpm_pool.conf
+COPY config/php.ini /etc/php84/conf.d/zzz_custom_php.ini
 COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY config/nginx_includes/* /etc/nginx/includes/
 COPY --chown=${UID} wp-config.php /usr/src/wordpress
