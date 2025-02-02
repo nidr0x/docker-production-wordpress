@@ -5,8 +5,7 @@ USER root
 ENV WPCLI_DOWNLOAD_SHA256=a39021ac809530ea607580dbf93afbc46ba02f86b6cffd03de4b126ca53079f6
 ENV WPCLI_VERSION=2.11.0
 
-RUN apk add --no-cache coreutils \
-  && curl -sfo /tmp/wp -L https://github.com/wp-cli/wp-cli/releases/download/v${WPCLI_VERSION}/wp-cli-${WPCLI_VERSION}.phar \
+RUN curl -sfo /tmp/wp -L https://github.com/wp-cli/wp-cli/releases/download/v${WPCLI_VERSION}/wp-cli-${WPCLI_VERSION}.phar \
   && echo "$WPCLI_DOWNLOAD_SHA256 /tmp/wp" | sha256sum -c - \
   && chmod +x /tmp/wp
 
