@@ -106,4 +106,3 @@ EXPOSE 8080
 STOPSIGNAL SIGQUIT
 
 CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
-
