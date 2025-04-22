@@ -1,4 +1,4 @@
-FROM curlimages/curl:8.6.0 AS download
+FROM curlimages/curl:8.13.0 AS download
 ENTRYPOINT []
 USER root
 
@@ -17,7 +17,7 @@ FROM public.ecr.aws/docker/library/alpine:3.21
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
   Description="Slim WordPress image using Alpine Linux"
 
-ENV WP_VERSION=6.7.2
+ENV WP_VERSION=6.8
 ENV WP_LOCALE=en_US
 
 ARG UID=82
