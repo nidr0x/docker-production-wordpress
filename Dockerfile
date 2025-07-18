@@ -1,4 +1,4 @@
-FROM curlimages/curl:8.13.0 AS download
+FROM curlimages/curl:8.15.0 AS download
 ENTRYPOINT []
 USER root
 
@@ -12,12 +12,12 @@ RUN curl -sfo /tmp/wp -L https://github.com/wp-cli/wp-cli/releases/download/v${W
 RUN set -x \
   && curl -f https://api.wordpress.org/secret-key/1.1/salt/ >> /tmp/wp-secrets.php
 
-FROM public.ecr.aws/docker/library/alpine:3.21
+FROM public.ecr.aws/docker/library/alpine:3.22
 
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
   Description="Slim WordPress image using Alpine Linux"
 
-ENV WP_VERSION=6.8.1
+ENV WP_VERSION=6.8.2
 ENV WP_LOCALE=en_US
 
 ARG UID=82
