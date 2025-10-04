@@ -1,9 +1,10 @@
-FROM curlimages/curl:8.15.0 AS download
+FROM curlimages/curl:8.16.0 AS download
 ENTRYPOINT []
 USER root
 
-ENV WPCLI_DOWNLOAD_SHA256=a39021ac809530ea607580dbf93afbc46ba02f86b6cffd03de4b126ca53079f6
-ENV WPCLI_VERSION=2.11.0
+ENV WPCLI_DOWNLOAD_SHA256=ce34ddd838f7351d6759068d09793f26755463b4a4610a5a5c0a97b68220d85c
+
+ENV WPCLI_VERSION=2.12.0
 
 RUN curl -sfo /tmp/wp -L https://github.com/wp-cli/wp-cli/releases/download/v${WPCLI_VERSION}/wp-cli-${WPCLI_VERSION}.phar \
   && echo "$WPCLI_DOWNLOAD_SHA256 /tmp/wp" | sha256sum -c - \
@@ -17,7 +18,7 @@ FROM public.ecr.aws/docker/library/alpine:3.22
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
   Description="Slim WordPress image using Alpine Linux"
 
-ENV WP_VERSION=6.8.2
+ENV WP_VERSION=6.8.3
 ENV WP_LOCALE=en_US
 
 ARG UID=82
