@@ -12,12 +12,12 @@ RUN curl -sfo /tmp/wp -L https://github.com/wp-cli/wp-cli/releases/download/v${W
 RUN set -x \
   && curl -f https://api.wordpress.org/secret-key/1.1/salt/ >> /tmp/wp-secrets.php
 
-FROM public.ecr.aws/docker/library/alpine:3.22
+FROM public.ecr.aws/docker/library/alpine:3.23
 
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
   Description="Slim WordPress image using Alpine Linux"
 
-ENV WP_VERSION=6.8.2
+ENV WP_VERSION=6.9
 ENV WP_LOCALE=en_US
 
 ARG UID=82
@@ -25,29 +25,28 @@ ARG GID=82
 
 RUN adduser -u $UID -D -S -G www-data www-data \
   && apk add --no-cache \
-  php84 \
-  php84-fpm \
-  php84-mysqli \
-  php84-json \
-  php84-openssl \
-  php84-curl \
-  php84-simplexml \
-  php84-ctype \
-  php84-mbstring \
-  php84-gd \
-  php84-exif \
+  php85 \
+  php85-fpm \
+  php85-mysqli \
+  php85-json \
+  php85-openssl \
+  php85-curl \
+  php85-simplexml \
+  php85-ctype \
+  php85-mbstring \
+  php85-gd \
+  php85-exif \
   nginx \
   supervisor \
-  php84-zlib \
-  php84-xml \
-  php84-phar \
-  php84-intl \
-  php84-dom \
-  php84-xmlreader \
-  php84-zip \
-  php84-opcache \
-  php84-fileinfo \
-  php84-iconv \
+  php85-zlib \
+  php85-xml \
+  php85-phar \
+  php85-intl \
+  php85-dom \
+  php85-xmlreader \
+  php85-zip \
+  php85-fileinfo \
+  php85-iconv \
   less
 
 RUN { \
@@ -56,7 +55,7 @@ RUN { \
   echo 'opcache.max_accelerated_files=4000'; \
   echo 'opcache.revalidate_freq=2'; \
   echo 'opcache.fast_shutdown=1'; \
-  } > /etc/php84/conf.d/opcache-recommended.ini
+  } > /etc/php85/conf.d/opcache-recommended.ini
 
 VOLUME /var/www/wp-content
 
@@ -65,14 +64,14 @@ WORKDIR /usr/src
 RUN set -x \
   && mkdir /usr/src/wordpress \
   && chown -R $UID:$GID /usr/src/wordpress \
-  && sed -i s/';cgi.fix_pathinfo=1/cgi.fix_pathinfo=0'/g /etc/php84/php.ini \
-  && sed -i s/'expose_php = On/expose_php = Off'/g /etc/php84/php.ini \
-  && ln -s /usr/sbin/php-fpm84 /usr/sbin/php-fpm \
-  && ln -s /usr/bin/php84 /usr/bin/php
+  && sed -i s/';cgi.fix_pathinfo=1/cgi.fix_pathinfo=0'/g /etc/php85/php.ini \
+  && sed -i s/'expose_php = On/expose_php = Off'/g /etc/php85/php.ini \
+  && ln -s /usr/sbin/php-fpm85 /usr/sbin/php-fpm \
+  && ln -s /usr/bin/php85 /usr/bin/php
 
 COPY config/nginx.conf /etc/nginx/nginx.conf
-COPY config/fpm-pool.conf /etc/php84/php-fpm.d/zzz_custom_fpm_pool.conf
-COPY config/php.ini /etc/php84/conf.d/zzz_custom_php.ini
+COPY config/fpm-pool.conf /etc/php85/php-fpm.d/zzz_custom_fpm_pool.conf
+COPY config/php.ini /etc/php85/conf.d/zzz_custom_php.ini
 COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY config/nginx_includes/* /etc/nginx/includes/
 COPY --chown=${UID} wp-config.php /usr/src/wordpress
