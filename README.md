@@ -38,7 +38,7 @@ If you would like to contribute to this project, feel free to open an issue or s
 ## References
 
 * https://github.com/docker-library/wordpress
-* https://codeable.io/wordpress-developers-intro-to-docker-part-one/
+* https://codeable.io/blog/wordpress-developers-intro-docker/
 * https://codeable.io/wordpress-developers-intro-to-docker-part-two/
 * https://github.com/TrafeX/docker-php-nginx/
 * https://hub.docker.com/_/wordpress/
