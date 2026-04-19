@@ -6,6 +6,15 @@ on:
     - cron: "0 0 * * *"
   push:
     tags:
+      - "*"
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   REGISTRY: ghcr.io
@@ -13,63 +22,150 @@ env:
   USER: nidr0x
 
 jobs:
-  build-and-push:
-    name: Build and push
+  prepare:
+    name: Prepare release metadata
     runs-on: ubuntu-latest
+    outputs:
+      version_tag: ${{ steps.tags.outputs.version_tag }}
+      publish_tags: ${{ steps.tags.outputs.publish_tags }}
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to the Container registry
+      - name: Log in to the container registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Resolve publish tags
+        id: tags
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          wp_version="$(sed -n 's/^ENV WP_VERSION=//p' Dockerfile)"
+          if [[ -z "${wp_version}" ]]; then
+            echo "Unable to determine WP_VERSION from Dockerfile" >&2
+            exit 1
+          fi
+
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            ref_tag="${GITHUB_REF_NAME}"
+            if [[ "${ref_tag}" != "${wp_version}" ]]; then
+              echo "Git tag ${ref_tag} does not match Dockerfile WP_VERSION ${wp_version}" >&2
+              exit 1
+            fi
+
+            version_tag="${ref_tag}"
+            publish_tags=$'ghcr.io/nidr0x/wordpress:'"${ref_tag}"$'\n''ghcr.io/nidr0x/wordpress:latest'
+          else
+            api_url="https://api.github.com/users/${USER}/packages/container/${IMAGE_NAME}/versions?per_page=100"
+            versions_json="$(curl -fsSL \
+              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "${api_url}" || printf '[]')"
+
+            rebuild_number="$(VERSIONS_JSON="${versions_json}" python3 -c 'import json, os, re, sys; wp_version = sys.argv[1]; pattern = re.compile(rf"^{re.escape(wp_version)}-r(\d+)$"); max_rebuild = 0; versions = json.loads(os.environ.get("VERSIONS_JSON", "[]")); [None for version in versions for tag in version.get("metadata", {}).get("container", {}).get("tags", []) if not (match := pattern.match(tag)) or (max_rebuild := max(max_rebuild, int(match.group(1))))]; print(max_rebuild + 1)' "${wp_version}")"
+
+            version_tag="${wp_version}-r${rebuild_number}"
+            publish_tags=$'ghcr.io/nidr0x/wordpress:'"${wp_version}-r${rebuild_number}"$'\n''ghcr.io/nidr0x/wordpress:latest\n''ghcr.io/nidr0x/wordpress:nightly'
+          fi
+
+          {
+            echo "version_tag=${version_tag}"
+            echo "publish_tags<<EOF"
+            printf '%s\n' "${publish_tags}"
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+
+  build-and-scan:
+    name: Build and scan (${{ matrix.suffix }})
+    runs-on: ubuntu-latest
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            suffix: amd64
+          - platform: linux/arm64
+            suffix: arm64
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4.0.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4.0.0
+
+      - name: Build Docker image locally
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          platforms: ${{ matrix.platform }}
+          tags: ${{ env.IMAGE_NAME }}:scan-${{ github.sha }}-${{ matrix.suffix }}
+          cache-from: type=gha,scope=${{ matrix.suffix }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.suffix }}
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:scan-${{ github.sha }}-${{ matrix.suffix }}
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+
+  publish:
+    name: Publish image
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+      - build-and-scan
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4.0.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4.0.0
+
+      - name: Log in to the container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata labels for Docker
+        id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.USER }}/${{ env.IMAGE_NAME }}
 
-      - uses: oprypin/find-latest-tag@v1
-        with:
-          repository: nidr0x/docker-production-wordpress
-          releases-only: true
-        id: wordpress
-
-      - name: Build Docker image
+      - name: Build and push multi-arch image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          platforms: linux/amd64, linux/386, linux/arm64
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.USER }}/${{ env.IMAGE_NAME }}:${{ steps.wordpress.outputs.tag }}
-            ${{ env.REGISTRY }}/${{ env.USER }}/${{ env.IMAGE_NAME }}:latest
-          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ needs.prepare.outputs.publish_tags }}
+          labels: |
+            ${{ steps.meta.outputs.labels }}
+            org.opencontainers.image.version=${{ needs.prepare.outputs.version_tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-  image-security:
-    name: Image security scan (Trivy)
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    strategy:
-      matrix:
-        platforms: [linux/amd64, linux/386, linux/arm64]
-
-    steps:
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.20.0
-        with:
-          image-ref: "${{ env.REGISTRY }}/${{ env.USER }}/${{ env.IMAGE_NAME }}:${{ steps.wordpress.outputs.tag }}"
-        env:
-          TRIVY_PLATFORM: ${{ matrix.platforms }}
+          provenance: true
+          sbom: true
