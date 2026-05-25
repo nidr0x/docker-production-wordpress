@@ -33,6 +33,8 @@ Use this during development/debugging and access WordPress at `http://127.0.0.1:
 docker compose up -d db wordpress
 ```
 
+MariaDB stays private in this default Docker Compose path.
+
 ### Production profile (includes Traefik)
 
 Use this to run the full stack from this repository:
@@ -41,11 +43,25 @@ Use this to run the full stack from this repository:
 docker compose up -d
 ```
 
+### Apple Container profile
+
+Use this when running through `container-compose`:
+
+```bash
+container-compose up -d -f container-compose.yml --env-file .env db wordpress
+```
+
+This profile keeps the Apple Container compatibility workarounds.
+MariaDB is intentionally published on host port `3306` in this profile because `container-compose`
+needs that path for WordPress-to-DB connectivity in this runtime.
+Use the multi-service startup command above; detached single-service startup is not the supported path here.
+
 Notes:
 
-- This compose file expects an external Docker network named `traefik`.
-- ACME in `docker-compose.yml` is currently configured for Let’s Encrypt staging.
-  Switch to production CA settings before go-live.
+- This compose file creates and manages the `traefik` and `backend` networks itself.
+- MariaDB tuning is baked into the custom DB image via `mariadb.Dockerfile`, which keeps it compatible with Apple `container-compose`.
+- Set `DOMAIN`, `LETSENCRYPT_EMAIL`, and `LETSENCRYPT_CA_SERVER` in `.env` before using the Traefik-enabled profile.
+- `LETSENCRYPT_CA_SERVER` should point at Let’s Encrypt staging while testing and the production directory before go-live.
 
 ## Important Paths
 
