@@ -37,8 +37,6 @@ services:
     volumes:
       - "./letsencrypt:/letsencrypt"
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
 
   db:
     build:
@@ -53,6 +51,9 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    # Apple container-compose needs the DB exposed on the host for WordPress connectivity.
+    ports:
+      - "3306:3306"
     volumes:
       - vol-wp-db:/var/lib/mysql
     networks:
@@ -78,8 +79,6 @@ services:
     volumes:
       - ./wp-content:/var/www/wp-content
       - ./images:/usr/src/wordpress/images
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
       - ./rootfs:/data
     labels:
       - "traefik.enable=true"
