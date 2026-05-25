@@ -51,11 +51,14 @@ RUN adduser -u $UID -D -S -G www-data www-data \
   less
 
 RUN { \
-  echo 'opcache.memory_consumption=128'; \
-  echo 'opcache.interned_strings_buffer=8'; \
-  echo 'opcache.max_accelerated_files=4000'; \
+  echo 'opcache.enable=1'; \
+  echo 'opcache.enable_cli=0'; \
+  echo 'opcache.memory_consumption=192'; \
+  echo 'opcache.interned_strings_buffer=16'; \
+  echo 'opcache.max_accelerated_files=10000'; \
+  echo 'opcache.validate_timestamps=1'; \
   echo 'opcache.revalidate_freq=2'; \
-  echo 'opcache.fast_shutdown=1'; \
+  echo 'opcache.save_comments=1'; \
   } > /etc/php85/conf.d/opcache-recommended.ini
 
 VOLUME /var/www/wp-content
@@ -84,6 +87,7 @@ COPY --from=download --chown=${UID} /tmp/wp-secrets.php /usr/src/wordpress/wp-se
 RUN set -x \
   && chown -R $UID:$GID /etc/nginx \
   && chown -R $UID:$GID /var/lib/nginx \
+  && printf '%s\n' '* * * * * php /usr/src/wordpress/wp-cron.php >> /dev/stdout 2>> /dev/stderr' > /etc/crontabs/www-data \
   && chmod -R g+w /etc/nginx \
   && chmod g+wx /var/log/ \
   && ln -sf /dev/stderr /var/lib/nginx/logs/error.log \
