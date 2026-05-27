@@ -85,7 +85,6 @@ RUN set -x \
   && chown -R $UID:$GID /etc/nginx \
   && chown -R $UID:$GID /var/lib/nginx \
   && chmod -R g+w /etc/nginx \
-  && chmod g+wx /var/log/ \
   && ln -sf /dev/stderr /var/lib/nginx/logs/error.log \
   && deluser nginx \
   && rm -rf /tmp/* \
