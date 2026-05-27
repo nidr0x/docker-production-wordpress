@@ -37,7 +37,7 @@ RUN adduser -u $UID -D -S -G www-data www-data \
   php85-mbstring \
   php85-gd \
   php85-exif \
-  nginx \
+  nginx=1.28.3-r2 \
   supervisor \
   php85-zlib \
   php85-xml \
@@ -89,7 +89,6 @@ RUN set -x \
   && chown -R $UID:$GID /var/lib/nginx \
   && printf '%s\n' '* * * * * php /usr/src/wordpress/wp-cron.php >> /dev/stdout 2>> /dev/stderr' > /etc/crontabs/www-data \
   && chmod -R g+w /etc/nginx \
-  && chmod g+wx /var/log/ \
   && ln -sf /dev/stderr /var/lib/nginx/logs/error.log \
   && deluser nginx \
   && rm -rf /tmp/* \
