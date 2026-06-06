@@ -1,0 +1,16 @@
+.git
+.github
+.DS_Store
+.env
+.env.*
+
+wp-content
+images
+letsencrypt
+scripts
+rootfs
+
+*.log
+*.tmp
+*.swp
+*~
