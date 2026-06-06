@@ -34,7 +34,7 @@ RUN adduser -u $UID -D -S -G www-data www-data \
   php85-mbstring \
   php85-gd \
   php85-exif \
-  nginx=1.28.3-r2 \
+  nginx \
   supervisor \
   php85-zlib \
   php85-xml \
