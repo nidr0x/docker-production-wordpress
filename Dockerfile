@@ -18,9 +18,6 @@ FROM public.ecr.aws/docker/library/alpine:3.23
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
   Description="Slim WordPress image using Alpine Linux"
 
-ENV WP_VERSION=7.0
-ENV WP_LOCALE=en_US
-
 ARG UID=82
 ARG GID=82
 
@@ -37,7 +34,7 @@ RUN adduser -u $UID -D -S -G www-data www-data \
   php85-mbstring \
   php85-gd \
   php85-exif \
-  nginx=1.28.3-r2 \
+  nginx \
   supervisor \
   php85-zlib \
   php85-xml \
@@ -47,8 +44,7 @@ RUN adduser -u $UID -D -S -G www-data www-data \
   php85-xmlreader \
   php85-zip \
   php85-fileinfo \
-  php85-iconv \
-  less
+  php85-iconv
 
 RUN { \
   echo 'opcache.enable=1'; \
@@ -98,6 +94,9 @@ RUN set -x \
   && rm -rf /var/www/localhost
 
 USER ${UID}
+
+ARG WP_VERSION=7.0
+ARG WP_LOCALE=en_US
 
 RUN set -x \
   && wp core download --path=/usr/src/wordpress --version="${WP_VERSION}" --skip-content --locale="${WP_LOCALE}"
