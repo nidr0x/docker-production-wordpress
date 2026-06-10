@@ -1,0 +1,3 @@
+#!/command/with-contenv sh
+
+exec /usr/sbin/crond -f -l 2
