@@ -35,7 +35,7 @@ RUN adduser -u $UID -D -S -G www-data www-data \
   php85-gd \
   php85-exif \
   nginx \
-  supervisor \
+  s6-overlay \
   php85-zlib \
   php85-xml \
   php85-phar \
@@ -65,6 +65,7 @@ WORKDIR /usr/src
 RUN set -x \
   && mkdir /usr/src/wordpress \
   && chown -R $UID:$GID /usr/src/wordpress \
+  && rm -f /etc/php85/php-fpm.d/www.conf \
   && sed -i s/';cgi.fix_pathinfo=1/cgi.fix_pathinfo=0'/g /etc/php85/php.ini \
   && sed -i s/'expose_php = On/expose_php = Off'/g /etc/php85/php.ini \
   && ln -s /usr/sbin/php-fpm85 /usr/sbin/php-fpm \
@@ -73,13 +74,17 @@ RUN set -x \
 COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/fpm-pool.conf /etc/php85/php-fpm.d/zzz_custom_fpm_pool.conf
 COPY config/php.ini /etc/php85/conf.d/zzz_custom_php.ini
-COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY config/nginx_includes/* /etc/nginx/includes/
+COPY config/s6-overlay/cont-init.d/ /etc/cont-init.d/
+COPY config/s6-overlay/services.d/ /etc/services.d/
 COPY --chown=${UID} wp-config.php /usr/src/wordpress
 COPY rootfs.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/rootfs.sh
 COPY --from=download --chown=${UID} /tmp/wp /usr/local/bin/wp
 COPY --from=download --chown=${UID} /tmp/wp-secrets.php /usr/src/wordpress/wp-secrets.php
+
+RUN chmod +x /etc/cont-init.d/* \
+  && find /etc/services.d -type f -name run -exec chmod +x {} +
 
 RUN set -x \
   && chown -R $UID:$GID /etc/nginx \
@@ -107,4 +112,4 @@ EXPOSE 8080
 
 STOPSIGNAL SIGQUIT
 
-CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+ENTRYPOINT ["/init"]
