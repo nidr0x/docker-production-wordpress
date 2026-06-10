@@ -1,0 +1,3 @@
+#!/command/with-contenv sh
+
+exec /bin/sh /usr/local/bin/rootfs.sh

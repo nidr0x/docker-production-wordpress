@@ -7,7 +7,7 @@ Production-oriented WordPress container stack based on Alpine Linux.
 - WordPress 7.0 (downloaded by `wp-cli`)
 - PHP-FPM 8.5 (ondemand process manager)
 - Nginx
-- Supervisor + cron
+- s6-overlay + cron
 - MariaDB (via `docker-compose.yml`)
 
 ## Prerequisites
