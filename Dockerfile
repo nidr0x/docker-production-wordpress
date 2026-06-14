@@ -44,7 +44,8 @@ RUN adduser -u $UID -D -S -G www-data www-data \
   php85-xmlreader \
   php85-zip \
   php85-fileinfo \
-  php85-iconv
+  php85-iconv \
+  && apk upgrade --no-cache
 
 RUN { \
   echo 'opcache.enable=1'; \
