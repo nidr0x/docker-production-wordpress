@@ -41,6 +41,7 @@ RUN adduser -u $UID -D -S -G www-data www-data \
   php85-phar \
   php85-intl \
   php85-dom \
+  php85-session \
   php85-xmlreader \
   php85-zip \
   php85-fileinfo \
