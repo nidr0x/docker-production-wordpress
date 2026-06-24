@@ -67,6 +67,7 @@ WORKDIR /usr/src
 RUN set -x \
   && mkdir /usr/src/wordpress \
   && chown -R $UID:$GID /usr/src/wordpress \
+  && chmod 1777 /run \
   && rm -f /etc/php85/php-fpm.d/www.conf \
   && sed -i s/';cgi.fix_pathinfo=1/cgi.fix_pathinfo=0'/g /etc/php85/php.ini \
   && sed -i s/'expose_php = On/expose_php = Off'/g /etc/php85/php.ini \
