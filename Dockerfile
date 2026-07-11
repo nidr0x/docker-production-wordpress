@@ -71,8 +71,7 @@ RUN set -x \
   && rm -f /etc/php85/php-fpm.d/www.conf \
   && sed -i s/';cgi.fix_pathinfo=1/cgi.fix_pathinfo=0'/g /etc/php85/php.ini \
   && sed -i s/'expose_php = On/expose_php = Off'/g /etc/php85/php.ini \
-  && ln -s /usr/sbin/php-fpm85 /usr/sbin/php-fpm \
-  && ln -s /usr/bin/php85 /usr/bin/php
+  && ln -s /usr/sbin/php-fpm85 /usr/sbin/php-fpm
 
 COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/fpm-pool.conf /etc/php85/php-fpm.d/zzz_custom_fpm_pool.conf
