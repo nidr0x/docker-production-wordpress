@@ -13,7 +13,7 @@ RUN curl -sfo /tmp/wp -L https://github.com/wp-cli/wp-cli/releases/download/v${W
 RUN set -x \
   && curl -f https://api.wordpress.org/secret-key/1.1/salt/ >> /tmp/wp-secrets.php
 
-FROM public.ecr.aws/docker/library/alpine:3.23
+FROM public.ecr.aws/docker/library/alpine:3.24
 
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
   Description="Slim WordPress image using Alpine Linux"
@@ -71,8 +71,7 @@ RUN set -x \
   && rm -f /etc/php85/php-fpm.d/www.conf \
   && sed -i s/';cgi.fix_pathinfo=1/cgi.fix_pathinfo=0'/g /etc/php85/php.ini \
   && sed -i s/'expose_php = On/expose_php = Off'/g /etc/php85/php.ini \
-  && ln -s /usr/sbin/php-fpm85 /usr/sbin/php-fpm \
-  && ln -s /usr/bin/php85 /usr/bin/php
+  && ln -s /usr/sbin/php-fpm85 /usr/sbin/php-fpm
 
 COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/fpm-pool.conf /etc/php85/php-fpm.d/zzz_custom_fpm_pool.conf
@@ -103,7 +102,7 @@ RUN set -x \
 
 USER ${UID}
 
-ARG WP_VERSION=7.0
+ARG WP_VERSION=7.0.1
 ARG WP_LOCALE=en_US
 
 RUN set -x \
