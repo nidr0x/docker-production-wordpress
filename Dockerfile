@@ -13,7 +13,7 @@ RUN curl -sfo /tmp/wp -L https://github.com/wp-cli/wp-cli/releases/download/v${W
 RUN set -x \
   && curl -f https://api.wordpress.org/secret-key/1.1/salt/ >> /tmp/wp-secrets.php
 
-FROM public.ecr.aws/docker/library/alpine:3.24
+FROM public.ecr.aws/docker/library/alpine:3.24 AS runtime
 
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
   Description="Slim WordPress image using Alpine Linux"
@@ -102,7 +102,7 @@ RUN set -x \
 
 USER ${UID}
 
-ARG WP_VERSION=7.0.2
+ARG WP_VERSION=7.0.3
 ARG WP_LOCALE=en_US
 
 RUN set -x \
