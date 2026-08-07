@@ -84,6 +84,7 @@ jobs:
           platforms: linux/amd64
           tags: ${{ env.IMAGE_NAME }}:validate-${{ github.sha }}
           cache-from: type=gha
+          no-cache-filters: runtime
 
       - name: Run Trivy image scan
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
@@ -148,6 +149,7 @@ jobs:
             io.wordpress.version=${{ steps.version.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          no-cache-filters: runtime
           provenance: true
           sbom: true
 
@@ -206,5 +208,6 @@ jobs:
             io.wordpress.channel=nightly
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          no-cache-filters: runtime
           provenance: true
           sbom: true
