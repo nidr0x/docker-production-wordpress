@@ -79,25 +79,25 @@ COPY config/php.ini /etc/php85/conf.d/zzz_custom_php.ini
 COPY config/nginx_includes/* /etc/nginx/includes/
 COPY config/s6-overlay/cont-init.d/ /etc/cont-init.d/
 COPY config/s6-overlay/services.d/ /etc/services.d/
-COPY --chown=${UID} wp-config.php /usr/src/wordpress
+COPY wp-config.php /usr/src/wordpress
 COPY rootfs.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/rootfs.sh
 COPY --from=download --chown=${UID} /tmp/wp /usr/local/bin/wp
-COPY --from=download --chown=${UID} /tmp/wp-secrets.php /usr/src/wordpress/wp-secrets.php
+COPY --from=download /tmp/wp-secrets.php /usr/src/wordpress/wp-secrets.php
 
 RUN chmod +x /etc/cont-init.d/* \
   && find /etc/services.d -type f -name run -exec chmod +x {} +
 
 RUN set -x \
-  && chown -R $UID:$GID /etc/nginx \
+  && chown -R root:root /etc/nginx \
   && chown -R $UID:$GID /var/lib/nginx \
   && printf '%s\n' '* * * * * php /usr/src/wordpress/wp-cron.php >> /dev/stdout 2>> /dev/stderr' > /etc/crontabs/www-data \
-  && chmod -R g+w /etc/nginx \
+  && chmod -R a-w /etc/nginx \
   && ln -sf /dev/stderr /var/lib/nginx/logs/error.log \
   && deluser nginx \
   && rm -rf /tmp/* \
-  && chmod 660 /usr/src/wordpress/wp-config.php \
   && sed -i '1s/^/<?php \n/' /usr/src/wordpress/wp-secrets.php \
+  && chmod 444 /usr/src/wordpress/wp-config.php /usr/src/wordpress/wp-secrets.php \
   && rm -rf /var/www/localhost
 
 USER ${UID}
