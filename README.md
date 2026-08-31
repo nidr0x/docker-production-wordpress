@@ -1,43 +1,43 @@
 # Rootless WordPress Docker Container
 
-Production-oriented WordPress container stack based on Alpine Linux.
+A WordPress container stack based on Alpine Linux for production use.
 
 ## Stack
 
-- WordPress 7.1 (downloaded by `wp-cli`)
-- PHP-FPM 8.5 (ondemand process manager)
+- WordPress 7.1, downloaded with `wp-cli`
+- PHP-FPM 8.5 with the ondemand process manager
 - Nginx
-- s6-overlay + cron
-- MariaDB (via `docker-compose.yml`)
+- s6-overlay and cron
+- MariaDB via `docker-compose.yml`
 
 ## Prerequisites
 
 - Docker Engine
 - Docker Compose v2 (`docker compose ...`)
 
-## Environment Setup
+## Set up the environment
 
-Copy the sample environment and adjust credentials and hostnames:
+Create `.env` from the sample, then set the credentials and hostnames:
 
 ```bash
 cp .env.example .env
 ```
 
-## Compose Run Profiles
+## Compose profiles
 
-### Local profile (app + database only)
+### Local profile
 
-Use this during development/debugging and access WordPress at `http://127.0.0.1:8081`.
+Use this profile for development or debugging. WordPress is available at `http://127.0.0.1:8081`.
 
 ```bash
 docker compose up -d db wordpress
 ```
 
-MariaDB stays private in this default Docker Compose path.
+MariaDB remains private on this default Docker Compose path.
 
-### Production profile (includes Traefik)
+### Production profile
 
-Use this to run the full stack from this repository:
+This profile starts the full stack, including Traefik:
 
 ```bash
 docker compose up -d
@@ -45,23 +45,22 @@ docker compose up -d
 
 ### Apple Container profile
 
-Use this when running through `container-compose`:
+Use this profile with `container-compose`:
 
 ```bash
 container-compose up -d -f container-compose.yml --env-file .env db wordpress
 ```
 
-This profile keeps the Apple Container compatibility workarounds.
-MariaDB is intentionally published on host port `3306` in this profile because `container-compose`
-needs that path for WordPress-to-DB connectivity in this runtime.
-Use the multi-service startup command above; detached single-service startup is not the supported path here.
+This profile includes the Apple Container compatibility workarounds. It publishes MariaDB on host port
+`3306` because `container-compose` requires that path for WordPress-to-DB connectivity in this runtime.
+Start the services together with the command above. Detached single-service startup is not supported here.
 
 Notes:
 
-- This compose file creates and manages the `traefik` and `backend` networks itself.
-- MariaDB tuning is baked into the custom DB image via `mariadb.Dockerfile`, which keeps it compatible with Apple `container-compose`.
-- Set `DOMAIN`, `LETSENCRYPT_EMAIL`, and `LETSENCRYPT_CA_SERVER` in `.env` before using the Traefik-enabled profile.
-- `LETSENCRYPT_CA_SERVER` should point at Let’s Encrypt staging while testing and the production directory before go-live.
+- This Compose file creates and manages the `traefik` and `backend` networks.
+- The custom DB image applies the MariaDB tuning from `mariadb.Dockerfile` and remains compatible with Apple `container-compose`.
+- Set `DOMAIN`, `LETSENCRYPT_EMAIL`, and `LETSENCRYPT_CA_SERVER` in `.env` before using the Traefik profile.
+- Point `LETSENCRYPT_CA_SERVER` at the Let's Encrypt staging directory while testing, then at the production directory before go-live.
 
 ## Important Paths
 
@@ -70,9 +69,9 @@ Notes:
 - `./config/nginx_includes/include.conf`: extra hardening and security rules
 - `./config/my.cnf`: MariaDB tuning
 
-## Contribution
+## Contributing
 
-Open an issue or pull request with reproduction steps and expected behavior.
+Open an issue or pull request with reproduction steps and the expected behavior.
 
 ## References
 
