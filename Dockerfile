@@ -26,7 +26,6 @@ RUN adduser -u $UID -D -S -G www-data www-data \
   php85 \
   php85-fpm \
   php85-mysqli \
-  php85-json \
   php85-openssl \
   php85-curl \
   php85-simplexml \
