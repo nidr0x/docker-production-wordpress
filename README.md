@@ -62,6 +62,16 @@ Notes:
 - Set `DOMAIN`, `LETSENCRYPT_EMAIL`, and `LETSENCRYPT_CA_SERVER` in `.env` before using the Traefik profile.
 - Point `LETSENCRYPT_CA_SERVER` at the Let's Encrypt staging directory while testing, then at the production directory before go-live.
 
+### Optional persistent object cache
+
+The image keeps the default per-request WordPress object cache and does not bundle Redis. To enable a persistent external cache:
+
+1. Mount a compatible Redis object-cache drop-in as `wp-content/object-cache.php`.
+2. Set `WP_CACHE=true` and the `WP_REDIS_*` variables shown in `.env.example`.
+3. Use a dedicated Redis database or prefix for each WordPress installation.
+
+The existing `wp-content` volume is the mount point for the drop-in. Redis remains an external service, so enabling this option does not add weight or a new service to the generic image. The selected drop-in must be compatible with the PHP extensions available in the image.
+
 ## Important Paths
 
 - `./wp-config.php`: environment-driven WordPress config
