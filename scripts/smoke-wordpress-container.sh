@@ -82,6 +82,11 @@ docker exec "$app_container" wp core install \
     --admin_email=smoke@example.invalid \
     --skip-email >/dev/null 2>&1
 
+docker exec "$app_container" wp theme install twentytwentyfive \
+    --path=/usr/src/wordpress \
+    --activate \
+    --force >/dev/null 2>&1
+
 status_body="$(docker exec "$app_container" sh -c 'wget -qO- http://127.0.0.1:8080/status')"
 printf '%s\n' "$status_body" | grep -q '^pool:.*www'
 
