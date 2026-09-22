@@ -4,7 +4,7 @@ A WordPress container stack based on Alpine Linux for production use.
 
 ## Stack
 
-- WordPress 7.1.1, downloaded with `wp-cli`
+- WordPress 7.1.2, downloaded with `wp-cli`
 - PHP-FPM 8.5 with the dynamic process manager
 - Nginx
 - s6-overlay and cron

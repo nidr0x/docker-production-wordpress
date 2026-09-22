@@ -101,7 +101,7 @@ RUN set -x \
 
 USER ${UID}
 
-ARG WP_VERSION=7.1.1
+ARG WP_VERSION=7.1.2
 ARG WP_LOCALE=en_US
 
 RUN set -x \
