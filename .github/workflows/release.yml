@@ -103,7 +103,8 @@ jobs:
           load: true
           platforms: ${{ matrix.platform }}
           tags: ${{ env.IMAGE_NAME }}:validate-${{ github.sha }}-${{ matrix.arch }}
-          cache-from: type=gha
+          cache-from: type=gha,scope=wordpress-release-validation-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=wordpress-release-validation-${{ matrix.arch }}
           no-cache-filters: runtime
 
       - name: Verify image architecture
@@ -182,8 +183,8 @@ jobs:
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
             io.wordpress.version=${{ steps.version.outputs.version }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=wordpress-release-publish
+          cache-to: type=gha,mode=max,scope=wordpress-release-publish
           no-cache-filters: runtime
           provenance: true
           sbom: true
@@ -243,8 +244,8 @@ jobs:
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
             io.wordpress.version=${{ steps.version.outputs.version }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=wordpress-release-publish
+          cache-to: type=gha,mode=max,scope=wordpress-release-publish
           no-cache-filters: runtime
           provenance: true
           sbom: true
@@ -303,8 +304,8 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             io.wordpress.version=${{ steps.version.outputs.version }}
             io.wordpress.channel=nightly
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=wordpress-release-publish
+          cache-to: type=gha,mode=max,scope=wordpress-release-publish
           no-cache-filters: runtime
           provenance: true
           sbom: true

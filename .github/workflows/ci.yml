@@ -88,7 +88,8 @@ jobs:
           load: true
           platforms: ${{ matrix.platform }}
           tags: ${{ env.IMAGE_NAME }}:ci-${{ github.sha }}-${{ matrix.arch }}
-          cache-from: type=gha
+          cache-from: type=gha,scope=wordpress-ci-${{ github.event_name }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=wordpress-ci-${{ github.event_name }}-${{ matrix.arch }}
           no-cache-filters: runtime
 
       - name: Verify image architecture
