@@ -10,10 +10,7 @@ RUN curl -sfo /tmp/wp -L https://github.com/wp-cli/wp-cli/releases/download/v${W
   && echo "$WPCLI_DOWNLOAD_SHA256 /tmp/wp" | sha256sum -c - \
   && chmod +x /tmp/wp
 
-RUN set -x \
-  && curl -f https://api.wordpress.org/secret-key/1.1/salt/ >> /tmp/wp-secrets.php
-
-FROM alpine:3.24 AS runtime
+FROM public.ecr.aws/docker/library/alpine:3.24 AS runtime
 
 LABEL Maintainer="Carlos R <nidr0x@gmail.com>" \
   Description="Slim WordPress image using Alpine Linux"
@@ -82,7 +79,6 @@ COPY wp-config.php /usr/src/wordpress
 COPY rootfs.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/rootfs.sh
 COPY --from=download --chown=${UID} /tmp/wp /usr/local/bin/wp
-COPY --from=download /tmp/wp-secrets.php /usr/src/wordpress/wp-secrets.php
 
 RUN chmod +x /etc/cont-init.d/* \
   && find /etc/services.d -type f -name run -exec chmod +x {} +
@@ -95,8 +91,7 @@ RUN set -x \
   && ln -sf /dev/stderr /var/lib/nginx/logs/error.log \
   && deluser nginx \
   && rm -rf /tmp/* \
-  && sed -i '1s/^/<?php \n/' /usr/src/wordpress/wp-secrets.php \
-  && chmod 444 /usr/src/wordpress/wp-config.php /usr/src/wordpress/wp-secrets.php \
+  && chmod 444 /usr/src/wordpress/wp-config.php \
   && rm -rf /var/www/localhost
 
 USER ${UID}

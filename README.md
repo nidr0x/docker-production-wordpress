@@ -10,6 +10,8 @@ A WordPress container stack based on Alpine Linux for production use.
 - s6-overlay and cron
 - MariaDB via `docker-compose.yml`
 
+If authentication keys are omitted, WordPress generates per-installation keys in the database. The first upgrade from the previous image signs users out once. Keep the database volume to preserve the generated keys.
+
 ## Prerequisites
 
 - Docker Engine
@@ -20,7 +22,7 @@ A WordPress container stack based on Alpine Linux for production use.
 Create `.env` from the sample, then set the credentials and hostnames:
 
 ```bash
-cp .env.example .env
+cp -n .env.example .env
 ```
 
 ## Compose profiles

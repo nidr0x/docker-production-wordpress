@@ -52,6 +52,7 @@ tags
 [._]*.un~
 
 # Other stuff
+.env
 config/nginx_includes/*.conf
 letsencrypt/
 wp-content/

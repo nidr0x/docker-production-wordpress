@@ -1,0 +1,8 @@
+misconfigurations:
+  - id: AVD-DS-0002
+    paths:
+      - mariadb.Dockerfile
+    statement: >-
+      The official MariaDB entrypoint starts as root to set mounted data
+      directory ownership, then re-executes as mysql. Running it as mysql
+      breaks fresh Apple Container volumes.

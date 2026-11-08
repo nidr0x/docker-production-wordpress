@@ -2,17 +2,17 @@ version: '3.7'
 name: docker-production-wordpress
 
 volumes:
-  vol-wp-content:
-  vol-wp-images:
   vol-wp-db:
 
 networks:
   backend:
+  docker-api:
+    internal: true
 
 services:
 
   traefik:
-    image: traefik:2.10
+    image: traefik:v3.7
     logging:
       options:
         max-size: "10m"
@@ -20,12 +20,16 @@ services:
     restart: unless-stopped
     networks:
       - backend
+      - docker-api
+    depends_on:
+      - docker-socket-proxy
     ports:
       - "80:80"
       - "443:443"
       - "8080:8080"
     command:
       - "--providers.docker=true"
+      - "--providers.docker.endpoint=tcp://docker-socket-proxy:2375"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web-secure.address=:443"
@@ -36,6 +40,21 @@ services:
       - "--certificatesresolvers.myhttpchallenge.acme.storage=/letsencrypt/acme.json"
     volumes:
       - "./letsencrypt:/letsencrypt"
+
+  docker-socket-proxy:
+    image: ghcr.io/tecnativa/docker-socket-proxy:v0.5.0
+    environment:
+      CONTAINERS: "1"
+      EVENTS: "1"
+      INFO: "1"
+      NETWORKS: "1"
+      PING: "1"
+      POST: "0"
+      VERSION: "1"
+    restart: unless-stopped
+    networks:
+      - docker-api
+    volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
   db:
@@ -47,13 +66,12 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    command: --default-authentication-plugin=mysql_native_password
     restart: unless-stopped
     env_file:
       - .env
     # Apple container-compose needs the DB exposed on the host for WordPress connectivity.
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       - vol-wp-db:/var/lib/mysql
     networks:
