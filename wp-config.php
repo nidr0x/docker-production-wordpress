@@ -35,6 +35,5 @@ if (!defined('ABSPATH')) {
     define('ABSPATH', dirname(__FILE__) . '/');
 }
 
-require_once(ABSPATH . 'wp-secrets.php');
 require_once(ABSPATH . 'wp-settings.php');
 @ini_set('display_errors', 0);
