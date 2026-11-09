@@ -1,92 +1,118 @@
-# Rootless WordPress Docker Container
+<div align="center">
+  <h1>Rootless WordPress Docker Container</h1>
+  <p>An Alpine-based WordPress image that runs as an unprivileged user, with Nginx, PHP-FPM, and Compose examples for MariaDB and Traefik.</p>
+  <p>
+    <a href="https://github.com/nidr0x/docker-production-wordpress/actions/workflows/ci.yml"><img src="https://github.com/nidr0x/docker-production-wordpress/actions/workflows/ci.yml/badge.svg?branch=master" alt="CI"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  </p>
+</div>
 
-A WordPress container stack based on Alpine Linux for production use.
+## Contents
 
-## Stack
+- [Overview](#overview)
+- [Requirements](#requirements)
+- [Quick start](#quick-start)
+- [Run modes](#run-modes)
+  - [Local access](#local-access)
+  - [Traefik](#traefik)
+  - [Apple Container](#apple-container)
+- [Optional Redis object cache](#optional-redis-object-cache)
+- [Project layout](#project-layout)
+- [Contributing](#contributing)
+- [License](#license)
+- [References](#references)
 
-- WordPress 7.1.2, downloaded with `wp-cli`
-- PHP-FPM 8.5 with the dynamic process manager
-- Nginx
-- s6-overlay and cron
-- MariaDB via `docker-compose.yml`
+## Overview
 
-If authentication keys are omitted, WordPress generates per-installation keys in the database. The first upgrade from the previous image signs users out once. Keep the database volume to preserve the generated keys.
+- WordPress 7.1.2 by default, downloaded with WP-CLI
+- PHP-FPM 8.5 and Nginx
+- MariaDB with project-specific configuration
+- Traefik for HTTPS routing when using the full Compose stack
 
-## Prerequisites
+If authentication keys are omitted, WordPress generates a per-installation secret in the database. The first upgrade from the previous image signs users out once because its keys were generated during the image build. Keep the database volume when recreating the container; replacing it signs users out again.
+
+## Requirements
 
 - Docker Engine
 - Docker Compose v2 (`docker compose ...`)
+- For the Apple Container setup: `container-compose`
 
-## Set up the environment
+## Quick start
 
-Create `.env` from the sample, then set the credentials and hostnames:
+Copy the sample environment file and replace its example database passwords before starting:
 
 ```bash
 cp -n .env.example .env
 ```
 
-## Compose profiles
-
-### Local profile
-
-Use this profile for development or debugging. WordPress is available at `http://127.0.0.1:8081`.
+For local access, start WordPress and MariaDB:
 
 ```bash
 docker compose up -d db wordpress
 ```
 
-MariaDB remains private on this default Docker Compose path.
+Open [http://127.0.0.1:8081](http://127.0.0.1:8081).
 
-### Production profile
+## Run modes
 
-This profile starts the full stack, including Traefik:
+### Local access
+
+The command above publishes WordPress on `127.0.0.1:8081`. MariaDB stays on the private Compose network.
+
+### Traefik
+
+The default Compose file starts the full stack, including Traefik:
 
 ```bash
 docker compose up -d
 ```
 
-### Apple Container profile
+Before starting it, set `DOMAIN`, `LETSENCRYPT_EMAIL`, and `LETSENCRYPT_CA_SERVER` in `.env`. Point the domain at the server and allow inbound ports 80 and 443. Use the Let's Encrypt staging directory while testing; switch to the production directory before go-live.
 
-Use this profile with `container-compose`:
+### Apple Container
+
+Use the compatibility Compose file with `container-compose`:
 
 ```bash
 container-compose up -d -f container-compose.yml --env-file .env db wordpress
 ```
 
-This profile includes the Apple Container compatibility workarounds. It publishes MariaDB on host port
-`3306` because `container-compose` requires that path for WordPress-to-DB connectivity in this runtime.
-Start the services together with the command above. Detached single-service startup is not supported here.
+Start both services together. MariaDB is published on host loopback port `3306` for this runtime's WordPress-to-database connectivity; remote hosts cannot connect through this binding. Detached single-service startup is not supported here.
 
-Notes:
+## Optional Redis object cache
 
-- This Compose file creates and manages the `traefik` and `backend` networks.
-- The custom DB image applies the MariaDB tuning from `mariadb.Dockerfile` and remains compatible with Apple `container-compose`.
-- Set `DOMAIN`, `LETSENCRYPT_EMAIL`, and `LETSENCRYPT_CA_SERVER` in `.env` before using the Traefik profile.
-- Point `LETSENCRYPT_CA_SERVER` at the Let's Encrypt staging directory while testing, then at the production directory before go-live.
+The image uses WordPress's default per-request object cache and does not include Redis. To use an external persistent cache:
 
-### Optional persistent object cache
-
-The image keeps the default per-request WordPress object cache and does not bundle Redis. To enable a persistent external cache:
-
-1. Mount a compatible Redis object-cache drop-in as `wp-content/object-cache.php`.
-2. Set `WP_CACHE=true` and the `WP_REDIS_*` variables shown in `.env.example`.
+1. Mount a compatible Redis object-cache drop-in at `wp-content/object-cache.php`.
+2. Set `WP_CACHE=true` and the required `WP_REDIS_*` variables from `.env.example`.
 3. Use a dedicated Redis database or prefix for each WordPress installation.
 
-The existing `wp-content` volume is the mount point for the drop-in. Redis remains an external service, so enabling this option does not add weight or a new service to the generic image. The selected drop-in must be compatible with the PHP extensions available in the image.
+The existing `wp-content` mount is the drop-in location. The drop-in must support the PHP extensions available in the image.
 
-## Important Paths
+## Project layout
 
-- `./wp-config.php`: environment-driven WordPress config
-- `./config/nginx.conf`: main Nginx config
-- `./config/nginx_includes/include.conf`: extra hardening and security rules
-- `./config/my.cnf`: MariaDB tuning
+| Path | Purpose |
+| --- | --- |
+| `docker-compose.yml` | Standard Compose stack with Traefik |
+| `container-compose.yml` | Apple Container-compatible stack |
+| `Dockerfile` | WordPress, PHP-FPM, and Nginx image |
+| `mariadb.Dockerfile` | MariaDB image build |
+| `wp-config.php` | Environment-driven WordPress configuration |
+| `config/nginx.conf` | Main Nginx configuration |
+| `config/nginx_includes/` | Additional Nginx security rules |
+| `config/my.cnf` | MariaDB configuration |
+| `scripts/` | Container smoke-check and version scripts |
 
 ## Contributing
 
 Open an issue or pull request with reproduction steps and the expected behavior.
 
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
 ## References
 
-- https://github.com/docker-library/wordpress
-- https://github.com/TrafeX/docker-php-nginx/
-- https://hub.docker.com/_/wordpress/
+- [WordPress Docker image source](https://github.com/docker-library/wordpress)
+- [TrafeX Docker PHP-Nginx](https://github.com/TrafeX/docker-php-nginx/)
+- [Official WordPress image on Docker Hub](https://hub.docker.com/_/wordpress/)
