@@ -1,4 +1,4 @@
-FROM curlimages/curl:8.16.0 AS download
+FROM curlimages/curl:8.23.0 AS download
 ENTRYPOINT []
 USER root
 
