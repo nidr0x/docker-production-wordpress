@@ -12,7 +12,7 @@ networks:
 services:
 
   traefik:
-    image: traefik:v3.7
+    image: traefik:v3.8
     logging:
       options:
         max-size: "10m"
